@@ -4,5 +4,12 @@
     "skills": "Aptitudini",
     "portfolio": "Portofoliu",
     "noMember": "Niciun membru"
+  },
+  "Hero": {
+    "tag": "Orange · Group 3",
+    "titleLine1": "Cea mai bună alegere",
+    "titleLine2": "Orange / Group 3",
+    "description": "Echipa numărul 3 reprezintă un grup de candidați cu performanțe ridicate în diverse domenii, format din profesioniști și experți dedicați.",
+    "cta": "Cunoaște membrii"
   }
 }

@@ -4,5 +4,12 @@
     "skills": "Skills",
     "portfolio": "Portfolio",
     "noMember": "No member"
+  },
+  "Hero": {
+    "tag": "Orange · Group 3",
+    "titleLine1": "The Best Choice",
+    "titleLine2": "Orange / Group 3",
+    "description": "Team number 3 represents a group of highly performing candidates across various fields, consisting of dedicated professionals and experts.",
+    "cta": "Meet the members"
   }
 }
