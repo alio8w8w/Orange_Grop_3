@@ -1,14 +1,17 @@
+// app/[locale]/layout.tsx
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { NextIntlClientProvider } from 'next-intl'
+import { getMessages } from 'next-intl/server'
+import { routing } from '@/i18n/routing'
+
 import './globals.css'
 
-// Optimizare și încărcare font (standard în Next.js)
 const inter = Inter({ 
   subsets: ['latin', 'latin-ext'],
   display: 'swap',
 })
 
-// Definitie Metadata globală (SEO și titlu în tab-ul din browser)
 export const metadata: Metadata = {
   title: {
     default: 'Aplicația Mea',
@@ -17,15 +20,29 @@ export const metadata: Metadata = {
   description: 'Descrierea aplicației tale',
 }
 
-export default function RootLayout({
+export default async function LocaleLayout({
   children,
-}: Readonly<{
+  params
+}: {
   children: React.ReactNode
-}>) {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+
+  // Dacă limba din URL nu este validă, folosim limba implicită în loc de notFound()
+  const activeLocale = routing.locales.includes(locale as any)
+    ? locale
+    : routing.defaultLocale
+
+  // Preluăm mesajele pentru limba activă
+  const messages = await getMessages({ locale: activeLocale })
+
   return (
-    <html lang="ro">
+    <html lang={activeLocale}>
       <body className={`${inter.className} antialiased`}>
-        {children}
+        <NextIntlClientProvider messages={messages} locale={activeLocale}>
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   )

@@ -83,10 +83,19 @@ export default function LoginForm() {
 
             <div className="auth-turnstile-container">
               <TurnstileWidget onVerify={setTurnstileToken} />
+              
+              {/* Câmp ascuns care transmite token-ul Turnstile către Server Action */}
+              <input
+                type="hidden"
+                name="cf-turnstile-response"
+                value={turnstileToken}
+              />
             </div>
 
             {signInState.error && (
-              <p className="auth-form__error" role="alert">{signInState.error}</p>
+              <p className="auth-form__error" role="alert">
+                {signInState.error}
+              </p>
             )}
 
             <SubmitButton>Trimite codul de acces</SubmitButton>
@@ -98,7 +107,8 @@ export default function LoginForm() {
           <form action={verifyAction} className="auth-form">
             <h1 className="auth-form__title">Verificare Email</h1>
             <p className="auth-form__subtitle">
-              {signInState.message ?? 'Introdu codul din 8 cifre trimis pe email sau apasă pe link-ul primit.'}
+              {signInState.message ??
+                'Introdu codul din 8 cifre trimis pe email sau apasă pe link-ul primit.'}
             </p>
 
             {/* Transmitere email ascuns pentru etapa de verificare */}
@@ -108,7 +118,9 @@ export default function LoginForm() {
             <OtpInput name="code" length={8} />
 
             {verifyState.error && (
-              <p className="auth-form__error" role="alert">{verifyState.error}</p>
+              <p className="auth-form__error" role="alert">
+                {verifyState.error}
+              </p>
             )}
 
             <SubmitButton>Confirmă codul</SubmitButton>
@@ -215,6 +227,8 @@ export default function LoginForm() {
 
         .auth-turnstile-container {
           display: flex;
+          flex-direction: column;
+          align-items: center;
           justify-content: center;
           margin: 0.25rem 0;
           min-height: 65px;

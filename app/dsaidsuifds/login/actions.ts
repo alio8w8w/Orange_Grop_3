@@ -13,21 +13,32 @@ async function verifyTurnstile(token: string) {
     return true
   }
 
-  if (!token) return false
-
-  const formData = new FormData()
-  formData.append('secret', process.env.TURNSTILE_SECRET_KEY!)
-  formData.append('response', token)
+  if (!token) {
+    console.warn('[Turnstile] Token nefurnizat din frontend.')
+    return false
+  }
 
   try {
-    const result = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-      body: formData,
+    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        secret: process.env.TURNSTILE_SECRET_KEY!,
+        response: token,
+      }),
     })
-    const outcome = await result.json()
+
+    const outcome = await response.json()
+
+    if (!outcome.success) {
+      console.error('[Turnstile] Validare eșuată de la Cloudflare:', outcome['error-codes'])
+    }
+
     return outcome.success
   } catch (error) {
-    console.error('Eroare verificare Turnstile:', error)
+    console.error('Eroare rețea/server la verificarea Turnstile:', error)
     return false
   }
 }
