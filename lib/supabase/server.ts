@@ -1,6 +1,8 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
+// Client standard pentru server (utilizează cookie-urile utilizatorului)
 export async function createClient() {
   const cookieStore = await cookies()
 
@@ -9,21 +11,16 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
+        getAll() {
+          return cookieStore.getAll()
         },
-        set(name: string, value: string, options: CookieOptions) {
+        setAll(cookiesToSet) {
           try {
-            cookieStore.set({ name, value, ...options })
-          } catch (error) {
-            // Dacă e numit din middleware, set() poate fi ignorat
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: '', ...options })
-          } catch (error) {
-            // Dacă e numit din middleware, remove() poate fi ignorat
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // Se ignoră dacă apelul este făcut dintr-un Server Component
           }
         },
       },
@@ -31,13 +28,16 @@ export async function createClient() {
   )
 }
 
-// Client special cu Service Role pentru logica de administrare (lockout)
-export async function createAdminClient() {
-  return createServerClient(
+// Client Admin cu Service Role (nu folosește cookie-uri, ignoră RLS)
+export function createAdminClient() {
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!, // Cheia secretă!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
-      cookies: {}, // Nu avem nevoie de cookies aici
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
     }
   )
 }
