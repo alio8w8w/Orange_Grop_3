@@ -9,8 +9,8 @@ import { useTranslations } from 'next-intl'
 // Lista imaginilor pentru caruselul de fundal
 const TEAM_IMAGES = [
   '/images/team-photo.png',
-  '/images/team-photo-2.png', // Asigură-te că adaugi imaginile în folderul public/images sau redenumește-le conform proiectului tău
-  '/images/team-photo-3.png',
+  '/images/team-photo2.png', // Asigură-te că adaugi imaginile în folderul public/images sau redenumește-le conform proiectului tău
+  '/images/team-photo3.png',
 ]
 
 export function HeroSection() {
