@@ -1,12 +1,13 @@
 "use client";
 
-// app/admin/dashboard/page.tsx
-// Pagina principala a panelului de administrare.
-// Presupune ca AuthProvider e deja pus in app/layout.tsx (radacina aplicatiei).
-
+// Pagina principală a panelului de administrare.
 import AdminLayout from "@/components/admin/AdminLayout";
 import CVDashboard from "@/components/admin/CVDashboard";
 import { useAuth } from "@/lib/auth-context";
+
+// OBLIGATORIU pentru paginile protejate/cu date de sesiune: 
+// Oprește generarea statică la build și forțează randarea dinamică la runtime.
+export const dynamic = 'force-dynamic';
 
 export default function DashboardPage() {
   const { profil, seIncarca } = useAuth();
