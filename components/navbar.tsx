@@ -1,18 +1,21 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { useTeam, type ViewKey } from '@/components/team-context'
 import { cn } from '@/lib/utils'
 
-const LINKS: { key: ViewKey; label: string }[] = [
-  { key: 'home', label: 'Home' },
-  { key: 'skills', label: 'Skills' },
-  { key: 'portfolio', label: 'Portfolio' },
-]
-
 export function Navbar() {
+  const t = useTranslations('Navbar')
   const { view, setView, setActiveMemberId, activeMember } = useTeam()
   const [scrolled, setScrolled] = useState(false)
+
+  const LINKS: { key: ViewKey; label: string }[] = [
+    { key: 'home', label: t('home') },
+    { key: 'skills', label: t('skills') },
+    { key: 'portfolio', label: t('portfolio') },
+  ]
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
@@ -21,7 +24,6 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // "Home" always returns to the main Team landing page.
   const goHome = () => {
     setActiveMemberId(null)
     setView('home')
@@ -51,9 +53,17 @@ export function Navbar() {
           onClick={goHome}
           className="flex items-center gap-2 text-left"
         >
-          <span className="flex h-8 w-8 items-center justify-center bg-brand-orange font-display text-lg font-black text-brand-black">
-            O
-          </span>
+          {/* Logo din public/images/logo.png */}
+          <div className="relative h-8 w-8 overflow-hidden rounded">
+            <Image
+              src="/images/logo.png"
+              alt="Logo"
+              width={32}
+              height={32}
+              className="object-contain"
+              priority
+            />
+          </div>
           <span className="font-display text-base font-extrabold uppercase tracking-tight text-brand-white">
             Orange<span className="text-brand-orange">/</span>Group 3
           </span>
@@ -95,7 +105,7 @@ export function Navbar() {
             </span>
           ) : (
             <span className="font-sans text-sm text-brand-white/25">
-              No member
+              {t('noMember')}
             </span>
           )}
         </div>
