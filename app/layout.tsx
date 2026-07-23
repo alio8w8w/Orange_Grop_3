@@ -29,7 +29,7 @@ export default async function LocaleLayout({
 }) {
   const { locale } = await params
 
-  // Dacă limba din URL nu este validă, folosim limba implicită în loc de notFound()
+  // Dacă limba din URL nu este validă, folosim limba implicită
   const activeLocale = routing.locales.includes(locale as any)
     ? locale
     : routing.defaultLocale
