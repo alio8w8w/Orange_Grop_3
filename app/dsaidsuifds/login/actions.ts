@@ -7,6 +7,12 @@ const LOCKOUT_DURATION_HOURS = 3
 
 // Verificare Cloudflare Turnstile
 async function verifyTurnstile(token: string) {
+  // Ignorăm verificarea în mediul local de Dev dacă nu este setată cheia în .env.local
+  if (!process.env.TURNSTILE_SECRET_KEY && process.env.NODE_ENV === 'development') {
+    console.warn('[Turnstile] Secret key lipsă în .env.local - verificare ignorată în Dev mode.')
+    return true
+  }
+
   if (!token) return false
 
   const formData = new FormData()
@@ -27,35 +33,43 @@ async function verifyTurnstile(token: string) {
 }
 
 // Verificare suspendare temporară (Anti-brute force)
-// NOTĂ: Supabase folosește interogări parametrizate, fiind 100% imun la SQL Injection.
 async function isEmailLockedOut(email: string) {
-  const supabaseAdmin = createAdminClient()
+  try {
+    const supabaseAdmin = await createAdminClient()
 
-  const threeHoursAgo = new Date()
-  threeHoursAgo.setHours(threeHoursAgo.getHours() - LOCKOUT_DURATION_HOURS)
+    const threeHoursAgo = new Date()
+    threeHoursAgo.setHours(threeHoursAgo.getHours() - LOCKOUT_DURATION_HOURS)
 
-  const { count, error } = await supabaseAdmin
-    .from('login_attempts')
-    .select('*', { count: 'exact', head: true })
-    .eq('email', email)
-    .eq('is_successful', false)
-    .gte('attempted_at', threeHoursAgo.toISOString())
+    const { count, error } = await supabaseAdmin
+      .from('login_attempts')
+      .select('*', { count: 'exact', head: true })
+      .eq('email', email)
+      .eq('is_successful', false)
+      .gte('attempted_at', threeHoursAgo.toISOString())
 
-  if (error) {
-    console.error('Eroare verificare lockout:', error)
+    if (error) {
+      console.error('Eroare verificare lockout:', error)
+      return false
+    }
+
+    return (count || 0) >= MAX_ATTEMPTS
+  } catch (e) {
+    console.error('Eroare la crearea clientului admin Supabase:', e)
     return false
   }
-
-  return (count || 0) >= MAX_ATTEMPTS
 }
 
-// Înregistrare încercare
+// Înregistrare încercare login
 async function recordAttempt(email: string, isSuccessful: boolean) {
-  const supabaseAdmin = createAdminClient()
-  await supabaseAdmin.from('login_attempts').insert({ 
-    email: email.trim().toLowerCase(), 
-    is_successful: isSuccessful 
-  })
+  try {
+    const supabaseAdmin = await createAdminClient()
+    await supabaseAdmin.from('login_attempts').insert({ 
+      email: email.trim().toLowerCase(), 
+      is_successful: isSuccessful 
+    })
+  } catch (e) {
+    console.error('Eroare la înregistrarea încercării de login:', e)
+  }
 }
 
 // ETAPA 1: Solicitare Cod OTP pe Email / Link
@@ -73,7 +87,7 @@ export async function signIn(prevState: any, formData: FormData) {
   // 1. Verificare Turnstile Bot Protection
   const isHuman = await verifyTurnstile(turnstileToken)
   if (!isHuman) {
-    return { error: 'Validare bot eșuată. Reîncărcați pagina.' }
+    return { error: 'Validare bot eșuată. Reîncărcați pagina sau bifați verificarea Turnstile.' }
   }
 
   // 2. Verificare Lockout (Anti Brute-Force)
@@ -84,33 +98,33 @@ export async function signIn(prevState: any, formData: FormData) {
 
   const supabase = await createClient()
 
-  // 3. Trimitere OTP pe Email (Blocat pentru conturi noi via shouldCreateUser: false)
+  // 3. Trimitere OTP pe Email
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      shouldCreateUser: false, // Blochează crearea de conturi noi neautorizate!
+      shouldCreateUser: false, // Blochează crearea de conturi noi neautorizate
     },
   })
 
   if (error) {
     await recordAttempt(email, false)
-    // Mesaj generic de securitate (evită confirmarea existenței adresei în baza de date)
+    
     if (error.status === 429) {
       return { error: 'Prea multe solicitări trimise. Așteptați câteva minute.' }
     }
+    return { error: error.message || 'A apărut o eroare la trimiterea codului. Încercați din nou.' }
   } else {
     await recordAttempt(email, true)
   }
 
-  // Răspundem cu succes chiar dacă adresa nu există (pentru securitate)
   return {
     success: true,
-    message: 'Dacă adresa există în sistem, un cod de verificare și un link au fost trimise pe Gmail.',
+    message: 'Dacă adresa există în sistem, un cod de verificare a fost trimis pe email.',
     email: email,
   }
 }
 
-// ETAPA 2: Verificare cod OTP primit pe Email (8 cifre conform setării tale)
+// ETAPA 2: Verificare cod OTP primit pe Email (8 cifre)
 export async function verifyOTP(prevState: any, formData: FormData) {
   const code = formData.get('code') as string
   const email = formData.get('email') as string
@@ -135,5 +149,9 @@ export async function verifyOTP(prevState: any, formData: FormData) {
     return { error: 'Cod invalid sau expirat. Verificați căsuța de email.' }
   }
 
-  return { success: true, redirectTo: '/admin' }
+  // Redirecționare către dashboard după autentificare reușită
+  return { 
+    success: true, 
+    redirectTo: '/dsaidsuifds/dashbord' 
+  }
 }
