@@ -1,0 +1,290 @@
+/* styles/orange-group-3.css
+   Importa acest fisier o singura data in app/globals.css (@import "../styles/orange-group-3.css";)
+   Paleta: negru #0A0A0A, portocaliu #FF7A1A / #FFB347, alb #F5F5F0. */
+
+:root {
+  --ogw-negru: #0a0a0a;
+  --ogw-negru-2: #121212;
+  --ogw-portocaliu: #ff7a1a;
+  --ogw-portocaliu-deschis: #ffb347;
+  --ogw-alb: #f5f5f0;
+  --ogw-sticla-bg: rgba(255, 255, 255, 0.045);
+  --ogw-sticla-border: rgba(255, 138, 46, 0.22);
+  --ogw-radius: 22px;
+  font-family: "Inter", "Space Grotesk", system-ui, sans-serif;
+}
+
+/* ---------- Fundal animat cu valuri ---------- */
+.ogw-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: radial-gradient(120% 100% at 50% 0%, #171310 0%, var(--ogw-negru) 55%);
+}
+
+.ogw-bg__glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.45;
+  animation: ogwFloat 18s ease-in-out infinite;
+}
+.ogw-bg__glow--1 {
+  width: 60vw;
+  height: 60vw;
+  background: var(--ogw-portocaliu);
+  top: -20%;
+  left: -10%;
+}
+.ogw-bg__glow--2 {
+  width: 45vw;
+  height: 45vw;
+  background: var(--ogw-portocaliu-deschis);
+  bottom: -15%;
+  right: -10%;
+  animation-delay: -9s;
+}
+
+@keyframes ogwFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(4%, 6%) scale(1.08); }
+}
+
+.ogw-bg__waves {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ogw-wave {
+  transform-origin: center;
+}
+.ogw-wave--a { animation: ogwWaveA 22s ease-in-out infinite; }
+.ogw-wave--b { animation: ogwWaveB 26s ease-in-out infinite; }
+
+/* Viteza "moderata": translatii mici, cicluri lungi (22-26s) — se misca
+   constant dar fara sa distraga atentia de la continutul din panouri. */
+@keyframes ogwWaveA {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(-30px) scaleY(1.06); }
+}
+@keyframes ogwWaveB {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(24px) scaleY(0.94); }
+}
+
+.ogw-bg__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ogw-bg__glow, .ogw-wave { animation: none !important; }
+}
+
+/* ---------- Mascota ---------- */
+.ogw-mascot__img {
+  filter: drop-shadow(0 8px 24px rgba(255, 122, 26, 0.35));
+}
+
+/* ---------- Glassmorphism ---------- */
+.ogw-glass {
+  background: var(--ogw-sticla-bg);
+  border: 1px solid var(--ogw-sticla-border);
+  border-radius: var(--ogw-radius);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- Layout admin ---------- */
+.ogw-shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+  color: var(--ogw-alb);
+}
+
+.ogw-sidebar {
+  margin: 20px;
+  padding: 24px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  position: sticky;
+  top: 20px;
+  height: calc(100vh - 40px);
+}
+
+.ogw-sidebar__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.ogw-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.ogw-sidebar__link {
+  padding: 10px 14px;
+  border-radius: 12px;
+  color: rgba(245, 245, 240, 0.75);
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.ogw-sidebar__link:hover { background: rgba(255, 122, 26, 0.1); color: var(--ogw-alb); }
+.ogw-sidebar__link--activ {
+  background: linear-gradient(135deg, var(--ogw-portocaliu), var(--ogw-portocaliu-deschis));
+  color: #1a0f00;
+  font-weight: 600;
+}
+
+.ogw-sidebar__profil {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ogw-sticla-border);
+}
+.ogw-sidebar__avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ogw-portocaliu), var(--ogw-portocaliu-deschis));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: #1a0f00;
+}
+.ogw-sidebar__nume { font-size: 0.9rem; font-weight: 600; margin: 0; }
+.ogw-sidebar__rol { font-size: 0.75rem; margin: 0; color: rgba(245,245,240,0.55); }
+.ogw-sidebar__logout {
+  margin-left: auto;
+  background: none; border: none; color: rgba(245,245,240,0.55);
+  cursor: pointer; font-size: 1rem;
+}
+
+.ogw-main { padding: 20px 32px 60px; }
+.ogw-main__header { margin-bottom: 24px; }
+.ogw-main__header h1 { font-size: 1.7rem; margin: 0; }
+.ogw-main__content { display: flex; flex-direction: column; gap: 20px; }
+
+/* ---------- Editor CV ---------- */
+.ogw-editor { display: flex; flex-direction: column; gap: 20px; }
+.ogw-editor__sectiune { padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+.ogw-editor__sectiune h2 { margin: 0 0 6px; font-size: 1.15rem; }
+.ogw-editor__actiuni { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+.ogw-editor__butoane { display: flex; gap: 10px; margin-left: auto; }
+.ogw-editor__poza-preview { width: 96px; height: 96px; border-radius: 16px; object-fit: cover; border: 1px solid var(--ogw-sticla-border); }
+
+.ogw-field__label { display: block; font-size: 0.8rem; margin-bottom: 6px; color: rgba(245,245,240,0.75); }
+.ogw-field__req { color: var(--ogw-portocaliu); }
+.ogw-field__opt { color: rgba(245,245,240,0.4); font-size: 0.7rem; }
+.ogw-field__eroare { color: #ff6b6b; font-size: 0.8rem; margin-top: 4px; }
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--ogw-sticla-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--ogw-alb);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--ogw-portocaliu);
+  background: rgba(255, 122, 26, 0.06);
+}
+
+.ogw-grid { display: grid; gap: 14px; }
+.ogw-grid--2 { grid-template-columns: 1fr 1fr; }
+.ogw-grid--carduri { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.ogw-grid__full { grid-column: 1 / -1; }
+@media (max-width: 720px) { .ogw-grid--2 { grid-template-columns: 1fr; } }
+
+/* ---------- Butoane ---------- */
+.ogw-btn {
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.ogw-btn--primar { background: linear-gradient(135deg, var(--ogw-portocaliu), var(--ogw-portocaliu-deschis)); color: #1a0f00; }
+.ogw-btn--primar:hover { transform: translateY(-1px); }
+.ogw-btn--ghost { background: rgba(255,255,255,0.06); color: var(--ogw-alb); border: 1px solid var(--ogw-sticla-border); }
+.ogw-btn--danger { background: rgba(255, 90, 60, 0.12); color: #ff8a70; border: 1px solid rgba(255,90,60,0.3); }
+.ogw-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.ogw-back-btn { margin-bottom: 16px; }
+
+/* ---------- Tag-uri (skills / permis) ---------- */
+.ogw-tag-input { display: flex; gap: 8px; }
+.ogw-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.ogw-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 999px;
+  background: rgba(255, 122, 26, 0.12); border: 1px solid var(--ogw-sticla-border);
+  font-size: 0.82rem;
+}
+.ogw-tag button { background: none; border: none; color: inherit; cursor: pointer; opacity: 0.6; }
+
+/* ---------- Liste repetabile ---------- */
+.ogw-repeatable__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.ogw-repeatable__header h3 { margin: 0; font-size: 1rem; }
+.ogw-repeatable__gol { color: rgba(245,245,240,0.45); font-size: 0.85rem; }
+.ogw-repeatable__item {
+  position: relative;
+  padding: 14px;
+  margin-bottom: 10px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--ogw-sticla-border);
+}
+.ogw-repeatable__sterge {
+  position: absolute; top: 10px; right: 10px;
+  background: none; border: none; color: rgba(245,245,240,0.5); cursor: pointer;
+}
+
+/* ---------- Upload ---------- */
+.ogw-upload__zona {
+  display: flex; align-items: center; justify-content: center;
+  padding: 22px; border: 1.5px dashed var(--ogw-sticla-border); border-radius: 16px;
+  cursor: pointer; font-size: 0.85rem; color: rgba(245,245,240,0.7);
+  transition: border-color 0.2s ease;
+}
+.ogw-upload__zona:hover { border-color: var(--ogw-portocaliu); }
+.ogw-upload__input { display: none; }
+
+.ogw-doc-list { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-direction: column; gap: 8px; }
+.ogw-doc-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,0.03); }
+.ogw-doc-list a { color: var(--ogw-portocaliu-deschis); text-decoration: none; }
+.ogw-doc-list button { background: none; border: none; color: rgba(245,245,240,0.5); cursor: pointer; }
+
+/* ---------- Carduri CV (vedere superadmin) ---------- */
+.ogw-card-cv { padding: 24px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.ogw-card-cv__avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--ogw-portocaliu), var(--ogw-portocaliu-deschis));
+  display: flex; align-items: center; justify-content: center; font-weight: 700; color: #1a0f00;
+}
+.ogw-card-cv h3 { margin: 0; }
+.ogw-card-cv__status { color: rgba(245,245,240,0.6); font-size: 0.85rem; margin: 0 0 8px; text-transform: capitalize; }
+
+.ogw-mesaj { font-size: 0.85rem; margin: 0; }
+.ogw-mesaj--ok { color: #7cd992; }
+.ogw-mesaj--eroare { color: #ff8a70; }
+.ogw-loading { padding: 40px; text-align: center; color: rgba(245,245,240,0.6); }
