@@ -171,3 +171,52 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Glowing blurred background orbs used across the site. */
+@keyframes orb-drift-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(6%, -8%, 0) scale(1.15);
+  }
+}
+
+@keyframes orb-drift-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.1);
+  }
+  50% {
+    transform: translate3d(-8%, 6%, 0) scale(0.9);
+  }
+}
+
+@keyframes orb-drift-c {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(0.95);
+  }
+  50% {
+    transform: translate3d(5%, 7%, 0) scale(1.2);
+  }
+}
+
+.animate-orb-a {
+  animation: orb-drift-a 18s ease-in-out infinite;
+}
+.animate-orb-b {
+  animation: orb-drift-b 22s ease-in-out infinite;
+}
+.animate-orb-c {
+  animation: orb-drift-c 26s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-orb-a,
+  .animate-orb-b,
+  .animate-orb-c {
+    animation: none;
+  }
+}

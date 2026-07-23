@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useTeam, type ViewKey } from '@/components/team-context'
 import { cn } from '@/lib/utils'
 
@@ -10,20 +11,50 @@ const LINKS: { key: ViewKey; label: string }[] = [
 ]
 
 export function Navbar() {
-  const { view, setView, activeMember } = useTeam()
+  const { view, setView, setActiveMemberId, activeMember } = useTeam()
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // "Home" always returns to the main Team landing page.
+  const goHome = () => {
+    setActiveMemberId(null)
+    setView('home')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleLink = (key: ViewKey) => {
+    if (key === 'home') {
+      goHome()
+      return
+    }
+    setView(key)
+  }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-brand-black/10 bg-brand-white/90 backdrop-blur">
+    <header
+      className={cn(
+        'fixed inset-x-0 top-0 z-50 transition-colors duration-300',
+        scrolled
+          ? 'border-b border-brand-white/10 bg-brand-black/60 backdrop-blur-xl'
+          : 'border-b border-transparent bg-transparent',
+      )}
+    >
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <button
           type="button"
-          onClick={() => setView('home')}
+          onClick={goHome}
           className="flex items-center gap-2 text-left"
         >
           <span className="flex h-8 w-8 items-center justify-center bg-brand-orange font-display text-lg font-black text-brand-black">
             O
           </span>
-          <span className="font-display text-base font-extrabold uppercase tracking-tight text-brand-black">
+          <span className="font-display text-base font-extrabold uppercase tracking-tight text-brand-white">
             Orange<span className="text-brand-orange">/</span>Group 3
           </span>
         </button>
@@ -35,13 +66,13 @@ export function Navbar() {
               <li key={link.key}>
                 <button
                   type="button"
-                  onClick={() => setView(link.key)}
+                  onClick={() => handleLink(link.key)}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn(
                     'relative px-3 py-2 font-display text-sm font-bold uppercase tracking-wide transition-colors sm:px-4',
                     isActive
-                      ? 'text-brand-black'
-                      : 'text-brand-black/50 hover:text-brand-black',
+                      ? 'text-brand-white'
+                      : 'text-brand-white/50 hover:text-brand-white',
                   )}
                 >
                   {link.label}
@@ -59,11 +90,11 @@ export function Navbar() {
 
         <div className="hidden min-w-[7rem] justify-end sm:flex">
           {activeMember ? (
-            <span className="truncate font-sans text-sm text-brand-black/60">
+            <span className="truncate font-sans text-sm text-brand-white/60">
               {activeMember.firstName} {activeMember.lastName}
             </span>
           ) : (
-            <span className="font-sans text-sm text-brand-black/30">
+            <span className="font-sans text-sm text-brand-white/25">
               No member
             </span>
           )}

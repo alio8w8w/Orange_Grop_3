@@ -34,6 +34,20 @@ export interface Contacts {
   location: string
 }
 
+export interface EducationEntry {
+  period: string
+  school: string
+  degree: string
+  detail: string
+}
+
+export interface ExperienceStats {
+  years: number
+  projects: number
+  clients: number
+  awards: number
+}
+
 export interface TeamMember {
   id: string
   firstName: string
@@ -44,10 +58,75 @@ export interface TeamMember {
   contacts: Contacts
   profilePicture: string
   teamPhoto: string // shared across the whole team
+  education: EducationEntry[]
+  experienceStats: ExperienceStats
   skills: Skill[]
   portfolioWorks: PortfolioWork[]
   themeVariant: ThemeVariant
 }
+
+export interface TeamProject {
+  id: string
+  title: string
+  category: string
+  year: string
+  image: string
+  description: string
+}
+
+/** Collective mission copy shown in the landing "About Us" section. */
+export const teamAbout = {
+  heading: 'One team, six disciplines, a single obsession with craft.',
+  paragraphs: [
+    'Orange Group 3 is a six-person creative collective spanning brand, motion, photography, illustration, product and type design. We came together to prove that a small, focused team can out-think and out-make studios many times our size.',
+    'Every project we take on is a shared endeavour. We trade skills, critique fearlessly and ship work that is sharper for having passed through six pairs of hands.',
+  ],
+  values: [
+    { label: 'Craft first', detail: 'Details are never negotiable.' },
+    { label: 'Bold by default', detail: 'Safe work is forgettable work.' },
+    { label: 'Together always', detail: 'Six perspectives, one direction.' },
+  ],
+}
+
+/** Projects the whole team built together — shown in "Common Projects". */
+export const teamProjects: TeamProject[] = [
+  {
+    id: 'tp-1',
+    title: 'Ember Festival',
+    category: 'Brand · Motion · Print',
+    year: '2025',
+    image: '/images/work-1.png',
+    description:
+      'A full identity, motion package and on-site signage system for a three-day arts festival.',
+  },
+  {
+    id: 'tp-2',
+    title: 'Halo Product Launch',
+    category: 'Product · Film · Photography',
+    year: '2025',
+    image: '/images/work-4.png',
+    description:
+      'End-to-end launch campaign for a consumer hardware brand, from UX to launch film.',
+  },
+  {
+    id: 'tp-3',
+    title: 'Type Anthology',
+    category: 'Editorial · Illustration',
+    year: '2024',
+    image: '/images/work-3.png',
+    description:
+      'A limited-run printed anthology celebrating experimental typography and pattern.',
+  },
+  {
+    id: 'tp-4',
+    title: 'Civic Wayfinding',
+    category: 'Environmental · Systems',
+    year: '2024',
+    image: '/images/work-7.png',
+    description:
+      'A city-wide wayfinding and signage program built on an accessible design system.',
+  },
+]
 
 const TEAM_PHOTO = '/images/team-photo.png'
 
@@ -68,6 +147,21 @@ export const teamMembers: TeamMember[] = [
     profilePicture: '/images/profile-1.png',
     teamPhoto: TEAM_PHOTO,
     themeVariant: 1,
+    education: [
+      {
+        period: '2014 — 2018',
+        school: 'Rhode Island School of Design',
+        degree: 'BFA, Graphic Design',
+        detail: 'Focused on identity systems and editorial typography.',
+      },
+      {
+        period: '2018 — 2019',
+        school: 'Type@Cooper',
+        degree: 'Postgraduate Certificate, Typeface Design',
+        detail: 'Intensive study of type anatomy and variable fonts.',
+      },
+    ],
+    experienceStats: { years: 8, projects: 120, clients: 45, awards: 6 },
     skills: [
       { name: 'Brand Identity', level: 95, category: 'Design' },
       { name: 'Typography', level: 90, category: 'Design' },
@@ -118,6 +212,21 @@ export const teamMembers: TeamMember[] = [
     profilePicture: '/images/profile-2.png',
     teamPhoto: TEAM_PHOTO,
     themeVariant: 2,
+    education: [
+      {
+        period: '2013 — 2017',
+        school: 'CalArts',
+        degree: 'BFA, Experimental Animation',
+        detail: 'Explored kinetic typography and motion storytelling.',
+      },
+      {
+        period: '2017 — 2018',
+        school: 'School of Motion',
+        degree: 'Advanced Motion Design',
+        detail: 'Mastered advanced After Effects and 3D pipelines.',
+      },
+    ],
+    experienceStats: { years: 9, projects: 140, clients: 52, awards: 8 },
     skills: [
       { name: 'After Effects', level: 96, category: 'Tools' },
       { name: 'Kinetic Type', level: 92, category: 'Motion' },
@@ -167,6 +276,21 @@ export const teamMembers: TeamMember[] = [
     profilePicture: '/images/profile-3.png',
     teamPhoto: TEAM_PHOTO,
     themeVariant: 3,
+    education: [
+      {
+        period: '2012 — 2016',
+        school: 'School of the Art Institute of Chicago',
+        degree: 'BFA, Photography',
+        detail: 'Concentration in editorial and architectural photography.',
+      },
+      {
+        period: '2016 — 2017',
+        school: 'ICP New York',
+        degree: 'Documentary Practice',
+        detail: 'Long-form visual storytelling and reportage.',
+      },
+    ],
+    experienceStats: { years: 11, projects: 160, clients: 70, awards: 5 },
     skills: [
       { name: 'Portrait', level: 94, category: 'Photography' },
       { name: 'Editorial', level: 90, category: 'Photography' },
@@ -216,6 +340,21 @@ export const teamMembers: TeamMember[] = [
     profilePicture: '/images/profile-4.png',
     teamPhoto: TEAM_PHOTO,
     themeVariant: 4,
+    education: [
+      {
+        period: '2015 — 2019',
+        school: 'ArtCenter College of Design',
+        degree: 'BFA, Illustration',
+        detail: 'Specialised in geometric and pattern-based illustration.',
+      },
+      {
+        period: '2019 — 2020',
+        school: 'Domestika Masterclass',
+        degree: 'Surface Pattern Design',
+        detail: 'Built a professional pattern and color practice.',
+      },
+    ],
+    experienceStats: { years: 7, projects: 95, clients: 38, awards: 4 },
     skills: [
       { name: 'Vector Illustration', level: 93, category: 'Illustration' },
       { name: 'Pattern Design', level: 91, category: 'Illustration' },
@@ -265,6 +404,21 @@ export const teamMembers: TeamMember[] = [
     profilePicture: '/images/profile-5.png',
     teamPhoto: TEAM_PHOTO,
     themeVariant: 5,
+    education: [
+      {
+        period: '2013 — 2017',
+        school: 'University of Washington',
+        degree: 'BSc, Human-Computer Interaction',
+        detail: 'Grounded in research-led, accessible product design.',
+      },
+      {
+        period: '2017 — 2018',
+        school: 'IDEO U',
+        degree: 'Design Thinking Certificate',
+        detail: 'Systems thinking and inclusive design methods.',
+      },
+    ],
+    experienceStats: { years: 8, projects: 110, clients: 40, awards: 5 },
     skills: [
       { name: 'Product Design', level: 92, category: 'Design' },
       { name: 'Prototyping', level: 90, category: 'Tools' },
@@ -314,6 +468,21 @@ export const teamMembers: TeamMember[] = [
     profilePicture: '/images/profile-6.png',
     teamPhoto: TEAM_PHOTO,
     themeVariant: 6,
+    education: [
+      {
+        period: '2012 — 2016',
+        school: 'Pratt Institute',
+        degree: 'BFA, Communication Design',
+        detail: 'Poster design, expressive type and print production.',
+      },
+      {
+        period: '2016 — 2017',
+        school: 'Werkplaats Typografie',
+        degree: 'Independent Type Study',
+        detail: 'Experimental layout and large-format typography.',
+      },
+    ],
+    experienceStats: { years: 10, projects: 130, clients: 48, awards: 9 },
     skills: [
       { name: 'Poster Design', level: 95, category: 'Design' },
       { name: 'Expressive Type', level: 94, category: 'Typography' },

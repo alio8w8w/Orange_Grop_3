@@ -14,14 +14,25 @@ function CurrentView() {
   return <HomeView />
 }
 
+function Main() {
+  const { view, activeMember } = useTeam()
+  // The Home landing hero sits full-screen behind the transparent navbar.
+  // Every other view needs to clear the fixed 4rem navbar.
+  const flush = view === 'home' && !activeMember
+
+  return (
+    <main className={flush ? 'flex-1' : 'flex-1 pt-16'}>
+      <CurrentView />
+    </main>
+  )
+}
+
 export function AppShell() {
   return (
     <TeamProvider>
-      <div className="flex min-h-screen flex-col bg-brand-white text-brand-black">
+      <div className="flex min-h-screen flex-col bg-brand-black text-brand-white">
         <Navbar />
-        <main className="flex-1">
-          <CurrentView />
-        </main>
+        <Main />
       </div>
     </TeamProvider>
   )

@@ -5,6 +5,7 @@ import { ArrowLeft, Mail, Phone, Globe, MapPin } from 'lucide-react'
 import type { TeamMember } from '@/lib/team-data'
 import { useTeam } from '@/components/team-context'
 import { MemberSwitcher } from '@/components/home/member-switcher'
+import { ECVSections } from '@/components/home/ecv-sections'
 
 // Variant 2 — Predominantly BLACK with white and orange accents. Bold, cinematic.
 export function Variant2({ member }: { member: TeamMember }) {
@@ -75,6 +76,8 @@ export function Variant2({ member }: { member: TeamMember }) {
             </span>
           </div>
         </div>
+
+        <ECVSections member={member} tone="dark" />
 
         <div className="mt-16 border-t border-brand-white/10 pt-8">
           <MemberSwitcher tone="onDark" />

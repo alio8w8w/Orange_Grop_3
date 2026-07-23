@@ -5,6 +5,7 @@ import { ArrowLeft, Mail, Phone, Globe, MapPin } from 'lucide-react'
 import type { TeamMember } from '@/lib/team-data'
 import { useTeam } from '@/components/team-context'
 import { MemberSwitcher } from '@/components/home/member-switcher'
+import { ECVSections } from '@/components/home/ecv-sections'
 
 // Variant 4 — GEOMETRIC. Layout built from base-color shapes and blocks.
 export function Variant4({ member }: { member: TeamMember }) {
@@ -105,7 +106,9 @@ export function Variant4({ member }: { member: TeamMember }) {
           ))}
         </ul>
 
-        <div className="mt-12 border-t-2 border-brand-black/15 pt-8">
+        <ECVSections member={member} tone="light" />
+
+        <div className="mt-16 border-t-2 border-brand-black/15 pt-8">
           <MemberSwitcher tone="onLight" />
         </div>
       </div>
