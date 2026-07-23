@@ -1,15 +1,11 @@
 'use client'
 
-
-import { useFormStatus, useFormState } from 'react-dom'
 import { useEffect, useState, useActionState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
-// Importuri acțiuni server (ajustează calea dacă ai mutat fisierul actions.ts)
 import { signIn, verifyOTP } from '@/app/dsaidsuifds/login/actions'
 
-// Importuri componente vizuale
 import WaveBackground from '@/components/auth/WaveBackground'
 import Mascot from '@/components/auth/Mascot'
 import TurnstileWidget from '@/components/auth/TurnstileWidget'
@@ -20,8 +16,6 @@ type SignInState = {
   error?: string
   success?: boolean
   message?: string
-  factorId?: string
-  challengeId?: string
   email?: string
 }
 
@@ -36,15 +30,13 @@ const initialVerifyState: VerifyState = {}
 
 export default function LoginForm() {
   const router = useRouter()
-  
+
   const [signInState, signInAction] = useActionState(signIn, initialSignInState)
   const [verifyState, verifyAction] = useActionState(verifyOTP, initialVerifyState)
   const [turnstileToken, setTurnstileToken] = useState('')
 
-  // Determinăm etapa: 'credentials' (Pasul 1) sau 'otp' (Pasul 2)
   const step: 'credentials' | 'otp' = signInState.success ? 'otp' : 'credentials'
 
-  // Redirecționare după ce codul OTP a fost verificat cu succes
   useEffect(() => {
     if (verifyState.success && verifyState.redirectTo) {
       router.push(verifyState.redirectTo)
@@ -53,14 +45,12 @@ export default function LoginForm() {
 
   return (
     <main className="auth-shell">
-      {/* Background animat și Mascotă */}
       <WaveBackground />
       <Mascot />
 
       <div className="auth-card">
         <div className="auth-card__seam" />
 
-        {/* LOGO-UL REAL DIN public/images/logo.png */}
         <div className="auth-card__logo">
           <Image
             src="/images/logo.png"
@@ -72,12 +62,12 @@ export default function LoginForm() {
           />
         </div>
 
-        {/* PASUL 1: EMAIL + PAROLĂ */}
+        {/* PASUL 1: INTRODUCERE EMAIL */}
         {step === 'credentials' && (
           <form action={signInAction} className="auth-form">
-            <h1 className="auth-form__title">Autentificare</h1>
+            <h1 className="auth-form__title">Autentificare Admin</h1>
             <p className="auth-form__subtitle">
-              Acces restricționat. Introdu datele contului tău.
+              Acces restricționat. Introdu adresa ta de email.
             </p>
 
             <label className="auth-field">
@@ -87,22 +77,10 @@ export default function LoginForm() {
                 name="email"
                 required
                 autoComplete="email"
-                placeholder="nume@companie.ro"
+                placeholder="nume@gmail.com"
               />
             </label>
 
-            <label className="auth-field">
-              <span>Parolă</span>
-              <input
-                type="password"
-                name="password"
-                required
-                autoComplete="current-password"
-                placeholder="••••••••"
-              />
-            </label>
-
-            {/* Turnstile Widget - generează singur câmpul necesar pentru server */}
             <div className="auth-turnstile-container">
               <TurnstileWidget onVerify={setTurnstileToken} />
             </div>
@@ -111,24 +89,23 @@ export default function LoginForm() {
               <p className="auth-form__error" role="alert">{signInState.error}</p>
             )}
 
-            <SubmitButton>Continuă</SubmitButton>
+            <SubmitButton>Trimite codul de acces</SubmitButton>
           </form>
         )}
 
-        {/* PASUL 2: VERIFICARE 2FA (OTP 6 CIFRE) */}
+        {/* PASUL 2: VERIFICARE COD OTP (8 CIFRE) SAU CLICK PE LINK */}
         {step === 'otp' && (
           <form action={verifyAction} className="auth-form">
-            <h1 className="auth-form__title">Verificare în 2 pași</h1>
+            <h1 className="auth-form__title">Verificare Email</h1>
             <p className="auth-form__subtitle">
-              {signInState.message ?? 'Introdu codul din aplicația de autentificare.'}
+              {signInState.message ?? 'Introdu codul din 8 cifre trimis pe email sau apasă pe link-ul primit.'}
             </p>
 
-            {/* Câmpuri ascunse trimise la server pentru validarea challenge-ului */}
-            <input type="hidden" name="factorId" value={signInState.factorId || ''} />
-            <input type="hidden" name="challengeId" value={signInState.challengeId || ''} />
+            {/* Transmitere email ascuns pentru etapa de verificare */}
+            <input type="hidden" name="email" value={signInState.email || ''} />
 
-            {/* Standard TOTP Supabase: 6 cifre */}
-            <OtpInput name="code" length={6} />
+            {/* OTP setat pe 8 cifre (conform configurării tale din Supabase) */}
+            <OtpInput name="code" length={8} />
 
             {verifyState.error && (
               <p className="auth-form__error" role="alert">{verifyState.error}</p>
@@ -139,7 +116,7 @@ export default function LoginForm() {
         )}
       </div>
 
-      <style jsx>{`
+      <style jsx global>{`
         .auth-shell {
           position: relative;
           min-height: 100dvh;
@@ -148,6 +125,7 @@ export default function LoginForm() {
           justify-content: center;
           padding: 1.5rem;
           font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+          background-color: #0c0705;
         }
 
         .auth-card {
@@ -157,7 +135,7 @@ export default function LoginForm() {
           max-width: 26rem;
           padding: 2.25rem 2rem 2rem;
           border-radius: 1.5rem;
-          background: rgba(12, 7, 5, 0.55);
+          background: rgba(12, 7, 5, 0.75);
           backdrop-filter: blur(22px) saturate(140%);
           -webkit-backdrop-filter: blur(22px) saturate(140%);
           border: 1px solid rgba(255, 179, 71, 0.18);
@@ -208,6 +186,7 @@ export default function LoginForm() {
           color: rgba(255, 233, 214, 0.6);
           text-align: center;
           margin: -0.5rem 0 0.25rem;
+          line-height: 1.4;
         }
 
         .auth-field {
@@ -234,14 +213,11 @@ export default function LoginForm() {
           box-shadow: 0 0 0 3px rgba(255, 138, 43, 0.18);
         }
 
-        .auth-field input::placeholder {
-          color: rgba(255, 233, 214, 0.3);
-        }
-
         .auth-turnstile-container {
           display: flex;
           justify-content: center;
           margin: 0.25rem 0;
+          min-height: 65px;
         }
 
         .auth-form__error {

@@ -8,7 +8,7 @@ const LOCKOUT_DURATION_HOURS = 3
 // Verificare Cloudflare Turnstile
 async function verifyTurnstile(token: string) {
   if (!token) return false
-  
+
   const formData = new FormData()
   formData.append('secret', process.env.TURNSTILE_SECRET_KEY!)
   formData.append('response', token)
@@ -27,9 +27,10 @@ async function verifyTurnstile(token: string) {
 }
 
 // Verificare suspendare temporară (Anti-brute force)
+// NOTĂ: Supabase folosește interogări parametrizate, fiind 100% imun la SQL Injection.
 async function isEmailLockedOut(email: string) {
   const supabaseAdmin = createAdminClient()
-  
+
   const threeHoursAgo = new Date()
   threeHoursAgo.setHours(threeHoursAgo.getHours() - LOCKOUT_DURATION_HOURS)
 
@@ -51,26 +52,31 @@ async function isEmailLockedOut(email: string) {
 // Înregistrare încercare
 async function recordAttempt(email: string, isSuccessful: boolean) {
   const supabaseAdmin = createAdminClient()
-  await supabaseAdmin.from('login_attempts').insert({ email, is_successful: isSuccessful })
+  await supabaseAdmin.from('login_attempts').insert({ 
+    email: email.trim().toLowerCase(), 
+    is_successful: isSuccessful 
+  })
 }
 
-// ETAPA 1: Autentificare Email + Parolă + Inițializare 2FA
+// ETAPA 1: Solicitare Cod OTP pe Email / Link
 export async function signIn(prevState: any, formData: FormData) {
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
+  const rawEmail = formData.get('email') as string
   const turnstileToken = formData.get('cf-turnstile-response') as string
 
-  if (!email || !password) {
-    return { error: 'Toate câmpurile sunt obligatorii.' }
+  if (!rawEmail) {
+    return { error: 'Adresa de email este obligatorie.' }
   }
 
-  // 1. Verificare Turnstile
+  // Igienizare email
+  const email = rawEmail.trim().toLowerCase()
+
+  // 1. Verificare Turnstile Bot Protection
   const isHuman = await verifyTurnstile(turnstileToken)
   if (!isHuman) {
     return { error: 'Validare bot eșuată. Reîncărcați pagina.' }
   }
 
-  // 2. Verificare Lockout
+  // 2. Verificare Lockout (Anti Brute-Force)
   const lockedOut = await isEmailLockedOut(email)
   if (lockedOut) {
     return { error: `Prea multe încercări eșuate. Contul este suspendat temporar (${LOCKOUT_DURATION_HOURS} ore).` }
@@ -78,76 +84,55 @@ export async function signIn(prevState: any, formData: FormData) {
 
   const supabase = await createClient()
 
-  // 3. Autentificare Supabase Auth
-  const { error } = await supabase.auth.signInWithPassword({
+  // 3. Trimitere OTP pe Email (Blocat pentru conturi noi via shouldCreateUser: false)
+  const { error } = await supabase.auth.signInWithOtp({
     email,
-    password,
+    options: {
+      shouldCreateUser: false, // Blochează crearea de conturi noi neautorizate!
+    },
   })
 
   if (error) {
     await recordAttempt(email, false)
-    return { error: 'Credențiale invalide.' }
+    // Mesaj generic de securitate (evită confirmarea existenței adresei în baza de date)
+    if (error.status === 429) {
+      return { error: 'Prea multe solicitări trimise. Așteptați câteva minute.' }
+    }
+  } else {
+    await recordAttempt(email, true)
   }
 
-  // 4. Verificare 2FA (Factor TOTP)
-  const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors()
-  
-  if (factorsError) {
-    await recordAttempt(email, false)
-    return { error: 'Eroare la verificarea factorilor de securitate 2FA.' }
-  }
-
-  const totpFactor = factors?.all.find(
-    (factor) => factor.factor_type === 'totp' && factor.status === 'verified'
-  )
-
-  if (!totpFactor) {
-    await recordAttempt(email, false)
-    await supabase.auth.signOut()
-    return { error: 'Autentificarea 2FA nu este configurată pentru acest cont admin.' }
-  }
-
-  // Inițializare provocare 2FA
-  const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
-    factorId: totpFactor.id
-  })
-
-  if (challengeError) {
-    await recordAttempt(email, false)
-    return { error: 'Eroare la generarea sesiunii 2FA.' }
-  }
-
-  await recordAttempt(email, true)
-
-  return { 
-    success: true, 
-    message: 'Introduceți codul din aplicația dvs. de autentificare.', 
-    factorId: totpFactor.id,
-    challengeId: challengeData.id,
-    email: email
+  // Răspundem cu succes chiar dacă adresa nu există (pentru securitate)
+  return {
+    success: true,
+    message: 'Dacă adresa există în sistem, un cod de verificare și un link au fost trimise pe Gmail.',
+    email: email,
   }
 }
 
-// ETAPA 2: Verificare cod OTP (6 cifre)
+// ETAPA 2: Verificare cod OTP primit pe Email (8 cifre conform setării tale)
 export async function verifyOTP(prevState: any, formData: FormData) {
   const code = formData.get('code') as string
-  const challengeId = formData.get('challengeId') as string
-  const factorId = formData.get('factorId') as string
+  const email = formData.get('email') as string
 
-  if (!code || code.length !== 6 || !challengeId || !factorId) {
-    return { error: 'Introduceți un cod de verificare valid de 6 cifre.' }
+  if (!code || !email) {
+    return { error: 'Introduceți codul primit pe email.' }
   }
+
+  const cleanCode = code.trim()
+  const cleanEmail = email.trim().toLowerCase()
 
   const supabase = await createClient()
 
-  const { error } = await supabase.auth.mfa.verify({
-    factorId: factorId,
-    challengeId: challengeId,
-    code: code
+  // Verificare OTP cu Supabase
+  const { error } = await supabase.auth.verifyOtp({
+    email: cleanEmail,
+    token: cleanCode,
+    type: 'email',
   })
 
   if (error) {
-    return { error: 'Cod 2FA invalid sau expirat.' }
+    return { error: 'Cod invalid sau expirat. Verificați căsuța de email.' }
   }
 
   return { success: true, redirectTo: '/admin' }
