@@ -15,7 +15,7 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { supabase } from "./supabase";
+import { supabase } from "./supabase/client";
 import type { AdminProfile } from "@/types/cv";
 
 interface AuthContextValue {

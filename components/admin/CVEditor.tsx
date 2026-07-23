@@ -10,14 +10,13 @@ import { motion } from "framer-motion";
 import GlassPanel from "@/components/ui/GlassPanel";
 import RepeatableGroup from "@/components/admin/RepeatableGroup";
 import FileUploadField from "@/components/admin/FileUploadField";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/client";
 import type {
   CV,
   ExperientaItem,
   EducatieItem,
   LimbaItem,
   PortofoliuItem,
-  CAMPURI_OBLIGATORII,
 } from "@/types/cv";
 
 const idNou = () => crypto.randomUUID();
@@ -127,7 +126,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
     );
   }
 
-  // --- Skills (tag input simplu) ---
+  // --- Skills ---
   function adaugaSkill() {
     const valoare = skillNou.trim();
     if (!valoare || cv.skills.includes(valoare)) return;
@@ -163,11 +162,12 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
 
     const payload = { ...cv, admin_id: adminId, updated_at: new Date().toISOString() };
 
-    // upsert: daca cv.id e gol, Supabase genereaza unul nou; RLS garanteaza
-    // ca update-ul trece doar daca admin_id == auth.uid() (sau esti superadmin).
+    const { id, ...payloadFaraId } = payload;
+    const dateDeSalvat = cv.id ? payload : payloadFaraId;
+
     const { data, error } = await supabase
       .from("cvs")
-      .upsert(cv.id ? payload : { ...payload, id: undefined })
+      .upsert(dateDeSalvat)
       .select()
       .single();
 

@@ -3,12 +3,11 @@
 // components/admin/CVDashboard.tsx
 // Panoul principal: superadmin vede cardurile tuturor celor 4 CV-uri si poate
 // intra sa editeze pe oricare; un admin obisnuit vede direct doar CV-ul lui.
-// Filtrarea reala e facuta de RLS in Supabase — aici doar afisam ce ne intoarce query-ul.
 
 import { useEffect, useState } from "react";
 import GlassPanel from "@/components/ui/GlassPanel";
 import CVEditor from "@/components/admin/CVEditor";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import type { CV, AdminProfile } from "@/types/cv";
 
@@ -24,9 +23,10 @@ export default function CVDashboard() {
   const [seIncarca, setSeIncarca] = useState(true);
 
   useEffect(() => {
-    if (!profil) return;
-
     async function incarca() {
+      // Mutat aici: TypeScript confirma ca 'profil' NU este null in tot blocul functiei incarca
+      if (!profil) return;
+
       setSeIncarca(true);
 
       if (esteSuperadmin) {

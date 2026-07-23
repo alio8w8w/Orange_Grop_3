@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
-// Client standard pentru server (utilizează cookie-urile utilizatorului)
+// Client standard pentru Server (utilizează cookie-urile sesiunii curente)
 export async function createClient() {
   const cookieStore = await cookies()
 
@@ -20,7 +20,7 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             )
           } catch {
-            // Se ignoră dacă apelul este făcut dintr-un Server Component
+            // Se ignoră dacă apelul este făcut dintr-un Server Component pur (read-only)
           }
         },
       },
@@ -28,7 +28,7 @@ export async function createClient() {
   )
 }
 
-// Client Admin cu Service Role (nu folosește cookie-uri, ignoră RLS)
+// Client Admin cu Service Role (bypassează RLS, acces complet la BD/Auth)
 export function createAdminClient() {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -4,7 +4,7 @@
 // Camp de incarcare fisiere (poza de profil / diplome / certificate) catre Supabase Storage.
 
 import { useRef, useState } from "react";
-import { incarcaFisier, STORAGE_BUCKETS } from "@/lib/supabase";
+import { incarcaFisier, STORAGE_BUCKETS } from "@/lib/supabase/client";
 
 interface FileUploadFieldProps {
   eticheta: string;
