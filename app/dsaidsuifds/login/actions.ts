@@ -1,7 +1,6 @@
 'use server'
 
 import { createClient, createAdminClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
 
 const MAX_ATTEMPTS = 3
 const LOCKOUT_DURATION_HOURS = 3
@@ -23,7 +22,7 @@ async function verifyTurnstile(token: string) {
 
 // Funcție pentru verificarea dacă email-ul este suspendat temporar
 async function isEmailLockedOut(email: string) {
-  const supabaseAdmin = await createAdminClient()
+  const supabaseAdmin = createAdminClient()
   
   const threeHoursAgo = new Date()
   threeHoursAgo.setHours(threeHoursAgo.getHours() - LOCKOUT_DURATION_HOURS)
@@ -37,7 +36,7 @@ async function isEmailLockedOut(email: string) {
 
   if (error) {
     console.error('Error checking lockout:', error)
-    return false // În caz de eroare, permitem încercarea, dar logăm eroarea
+    return false
   }
 
   return (count || 0) >= MAX_ATTEMPTS
@@ -45,8 +44,7 @@ async function isEmailLockedOut(email: string) {
 
 // Funcție pentru înregistrarea unei încercări
 async function recordAttempt(email: string, isSuccessful: boolean) {
-  const supabaseAdmin = await createAdminClient()
-  // În producție, ar trebui să preluăm IP-ul din request headers
+  const supabaseAdmin = createAdminClient()
   await supabaseAdmin.from('login_attempts').insert({ email, is_successful: isSuccessful })
 }
 
@@ -73,22 +71,18 @@ export async function signIn(prevState: any, formData: FormData) {
 
   const supabase = await createClient()
 
-  // 3. Încercare autentificare Supabase (Prima etapă: Email + Parolă)
-  const { data, error } = await supabase.auth.signInWithPassword({
+  // 3. Încercare autentificare Supabase (Email + Parolă)
+  const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
 
   if (error) {
     await recordAttempt(email, false)
-    // Supabase Auth returnează "Invalid login credentials" pentru securitate
     return { error: 'Credențiale invalide.' }
   }
 
-  // 4. Verificare 2FA (Factorul 2)
-  // Dacă utilizatorul a trecut de parolă, Supabase va verifica dacă 2FA e configurat.
-  // Notă: Trebuie să configurezi Supabase 2FA via Email în Dashboard.
-  
+  // 4. Verificare 2FA (Factorul 2 - TOTP)
   const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors()
   
   if (factorsError) {
@@ -96,65 +90,60 @@ export async function signIn(prevState: any, formData: FormData) {
     return { error: 'Eroare la verificarea autentificării multifactor.' }
   }
 
-  // Căutăm factorul verificat de tip email
-  const emailFactor = factors?.all.find(
-    (factor) => factor.factor_type === 'email' && factor.status === 'verified'
+  // Căutăm factorul TOTP verificat (Google Authenticator / Authy)
+  const totpFactor = factors?.all.find(
+    (factor) => factor.factor_type === 'totp' && factor.status === 'verified'
   )
 
-  if (!emailFactor) {
-    // Dacă utilizatorul nu are 2FA configurat, dar este unul din cei 4, 
-    // ar trebui să-l obligi să-l configureze la prima logare. 
-    // Pentru acest exemplu, presupunem că este deja configurat.
+  if (!totpFactor) {
     await recordAttempt(email, false)
-     // Ne logăm afară pentru că nu permitem acces fără 2FA
     await supabase.auth.signOut()
     return { error: 'Autentificarea multifactor (2FA) nu este configurată pentru acest cont. Contactați administratorul.' }
   }
 
-  // Provocăm factorul 2 (trimite codul pe email)
+  // Creăm un challenge pentru factorul TOTP găsit
   const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
-    factorId: emailFactor.id
+    factorId: totpFactor.id
   })
 
   if (challengeError) {
     await recordAttempt(email, false)
-    return { error: 'Eroare la trimiterea codului de verificare 2FA.' }
+    return { error: 'Eroare la inițializarea verificării 2FA.' }
   }
 
   await recordAttempt(email, true)
 
-  // Logarea inițială e ok, acum avem nevoie de codul OTP.
-  // Returnăm challengeId pentru a-l folosi pe frontend
   return { 
     success: true, 
-    message: 'Un cod de verificare a fost trimis pe email.', 
+    message: 'Introduceți codul din aplicația de autentificare (Google Authenticator / Authy).', 
+    factorId: totpFactor.id,
     challengeId: challengeData.id,
-    email: email // Păstrăm email-ul pentru etapa următoare
+    email: email
   }
 }
 
 export async function verifyOTP(prevState: any, formData: FormData) {
-    const code = formData.get('code') as string
-    const challengeId = formData.get('challengeId') as string
-    const email = formData.get('email') as string
+  const code = formData.get('code') as string
+  const challengeId = formData.get('challengeId') as string
+  const factorId = formData.get('factorId') as string
 
-    if (!code || !challengeId) {
-        return { error: 'Codul este obligatoriu.' }
-    }
+  if (!code || !challengeId || !factorId) {
+    return { error: 'Codul și detaliile de sesiune sunt obligatorii.' }
+  }
 
-    const supabase = await createClient()
+  const supabase = await createClient()
 
-    // Verificăm codul OTP
-    const { error } = await supabase.auth.mfa.verify({
-        factorId: challengeId, // Folosim challengeId primit anterior
-        challengeId: challengeId,
-        code: code
-    })
+  // Verificăm codul introduse
+  const { error } = await supabase.auth.mfa.verify({
+    factorId: factorId,
+    challengeId: challengeId,
+    code: code
+  })
 
-    if (error) {
-        return { error: 'Cod de verificare invalid sau expirat.' }
-    }
+  if (error) {
+    return { error: 'Cod de verificare invalid sau expirat.' }
+  }
 
-    // Succes deplin! 2FA validat.
-    return { success: true, redirectTo: '/admin' }
+  // Succes deplin! 2FA validat.
+  return { success: true, redirectTo: '/admin' }
 }

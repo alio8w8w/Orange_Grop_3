@@ -1,7 +1,8 @@
+
 'use client'
 
-import { useFormState, useFormStatus } from 'react-dom'
-import { useState, useEffect } from 'react'
+import { useActionState, useState, useEffect } from 'react' // useActionState este în 'react'
+import { useFormStatus } from 'react-dom'                  // useFormStatus este în 'react-dom'
 import Turnstile, { useTurnstile } from 'react-turnstile'
 import { signIn, verifyOTP } from './actions'
 import { useRouter } from 'next/navigation'
@@ -16,8 +17,8 @@ function SubmitButton({ label }: { label: string }) {
 }
 
 export default function LoginPage() {
-  const [signInState, signInAction] = useFormState(signIn, null)
-  const [otpState, otpAction] = useFormState(verifyOTP, null)
+const [signInState, signInAction] = useActionState(signIn, null)
+const [otpState, otpAction] = useActionState(verifyOTP, null)
   const [showOTP, setShowOTP] = useState(false)
   const [email, setEmail] = useState('')
   const [challengeId, setChallengeId] = useState('')
