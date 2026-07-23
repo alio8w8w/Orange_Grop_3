@@ -2,16 +2,13 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // Lista celor 4 persoane care au voie în dashboard
-const ADMIN_EMAILS = [
-  'admin1@exemplu.com', 
-  'admin2@exemplu.com', 
-  'admin3@exemplu.com', 
-  'admin4@exemplu.com'
-]
+// Citim lista de email-uri din .env.local și le transformăm într-un array (listă)
+// Dacă lipsește variabila, returnăm un array gol ca măsură de siguranță
+const ADMIN_EMAILS = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',') : []
 
-const ADMIN_PATH = '/dsaidsuifds' 
+const ADMIN_PREFIX = '/dsaidsuifds'
+const ADMIN_LOGIN_PATH = '/dsaidsuifds/login'
 
-// MODIFICAREA AICI: Am redenumit funcția din 'middleware' în 'proxy'
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -55,28 +52,36 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user }, error } = await supabase.auth.getUser()
 
-  // 1. HTTP Security Headers
+  // HTTP Security Headers
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
 
-  const isTryingToAccessAdmin = request.nextUrl.pathname.startsWith(ADMIN_PATH)
+  const pathname = request.nextUrl.pathname
 
-  // 2. Protecție rute admin
-  if (isTryingToAccessAdmin) {
+  // Protecție rute admin
+  if (pathname.startsWith(ADMIN_PREFIX)) {
+    
+    // EXCEPȚIE: Permitem accesul la pagina de login din interiorul adminului
+    if (pathname === ADMIN_LOGIN_PATH) {
+      // Dacă este pe pagina de login și este DEJA logat ca admin, trimite-l în dashboard
+      if (user && ADMIN_EMAILS.includes(user.email ?? '')) {
+        // Schimbă '/dsaidsuifds/dashboard' cu adresa reală a dashboard-ului tău dacă e diferită
+        return NextResponse.redirect(new URL('/dsaidsuifds/dashboard', request.url)) 
+      }
+      // Altfel, lasă-l să vadă pagina de login
+      return response
+    }
+
+    // Pentru ORICE ALTĂ rută din /dsaidsuifds (ex: /dsaidsuifds/dashboard)
     if (!user || error) {
-      return NextResponse.redirect(new URL('/login', request.url))
+      // Nu e logat deloc -> trimis la login-ul de admin
+      return NextResponse.redirect(new URL(ADMIN_LOGIN_PATH, request.url))
     }
 
     if (!ADMIN_EMAILS.includes(user.email ?? '')) {
+      // E logat cu alt cont (nu face parte din cei 4) -> trimis pe homepage
       return NextResponse.redirect(new URL('/', request.url))
-    }
-  }
-
-  // 3. Redirecționare dacă este deja autentificat pe pagina de login
-  if (request.nextUrl.pathname === '/login' && user) {
-    if (ADMIN_EMAILS.includes(user.email ?? '')) {
-      return NextResponse.redirect(new URL(ADMIN_PATH, request.url))
     }
   }
 
@@ -85,9 +90,9 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    // Prinde tot ce e în folderul secret
     '/dsaidsuifds/:path*',
-    '/admin/:path*',
-    '/login',
+    // Exclude fișierele statice și de sistem Next.js
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
