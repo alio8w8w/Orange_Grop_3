@@ -5,17 +5,46 @@ import Image from 'next/image'
 
 type Direction = 'up' | 'down' | 'left' | 'right' | 'static'
 
-const SPRITES: Record<Direction, string> = {
-  up: '/mascot/up.png',
-  down: '/mascot/down.png',
-  left: '/mascot/left.png',
-  right: '/mascot/right.png',
-  static: '/mascot/static.png',
+// ⚙️ CONFIGURARE DEDICATĂ PENTRU FIECARE STARE A MASCOTEI
+// Dacă un sprite (ex: left/right) ți se pare prea mic, mărește 'width' și 'height' pentru el!
+const CONFIG: Record<Direction, { src: string; width: number; height: number; offsetX: number; offsetY: number }> = {
+  static: {
+    src: '/mascot/static.png',
+    width: 96,
+    height: 110,
+    offsetX: 48, // Mâinile sunt la jumătatea lățimii (96 / 2)
+    offsetY: 8,  // Mâinile sunt sus
+  },
+  up: {
+    src: '/mascot/up.png',
+    width: 96,
+    height: 110,
+    offsetX: 48,
+    offsetY: 8,
+  },
+  down: {
+    src: '/mascot/down.png',
+    width: 96,
+    height: 110,
+    offsetX: 48,
+    offsetY: 8,
+  },
+  // Mărim dimensiunile pentru stânga/dreapta ca să nu mai pară mici!
+  left: {
+    src: '/mascot/left.png',
+    width: 120,  // Dimensiune mărită
+    height: 90,
+    offsetX: 100, // Mâinile sunt în partea dreaptă a imaginii rotite
+    offsetY: 15,
+  },
+  right: {
+    src: '/mascot/right.png',
+    width: 120,  // Dimensiune mărită
+    height: 90,
+    offsetX: 20,  // Mâinile sunt în partea stângă a imaginii rotite
+    offsetY: 15,
+  },
 }
-
-const SIZE = 96
-const EASE = 0.25 // CRESCUT de la 0.08 la 0.25 pentru o mișcare mult mai rapidă!
-const IDLE_THRESHOLD = 0.4
 
 export default function Mascot() {
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -24,72 +53,68 @@ export default function Mascot() {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
-    let pos = { x: mouse.x, y: mouse.y }
-    let rafId: number
+    let lastMouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
     let lastDirection: Direction = 'static'
 
     const handleMouseMove = (e: MouseEvent) => {
-      mouse.x = e.clientX
-      mouse.y = e.clientY
-    }
-    window.addEventListener('mousemove', handleMouseMove)
+      const dx = e.clientX - lastMouse.x
+      const dy = e.clientY - lastMouse.y
+      const dist = Math.hypot(dx, dy)
 
-    const tick = () => {
-      const dx = mouse.x - pos.x
-      const dy = mouse.y - pos.y
+      let nextDir: Direction = lastDirection
 
-      pos.x += dx * EASE
-      pos.y += dy * EASE
-
-      const speed = Math.hypot(dx * EASE, dy * EASE)
-      let nextDirection: Direction = lastDirection
-
-      if (speed < IDLE_THRESHOLD) {
-        nextDirection = 'static'
+      // Detecție direcție
+      if (dist < 4) {
+        nextDir = 'static'
       } else if (Math.abs(dx) > Math.abs(dy)) {
-        nextDirection = dx > 0 ? 'right' : 'left'
+        nextDir = dx > 0 ? 'right' : 'left'
       } else {
-        nextDirection = dy > 0 ? 'down' : 'up'
+        nextDir = dy > 0 ? 'down' : 'up'
       }
 
-      if (nextDirection !== lastDirection) {
-        lastDirection = nextDirection
-        setDirection(nextDirection)
+      if (nextDir !== lastDirection) {
+        lastDirection = nextDir
+        setDirection(nextDir)
       }
 
+      // ⚡ ACTUALIZARE INSTANTANEE (Fără lag, lipit 100% de cursor)
+      const currentConfig = CONFIG[nextDir]
       if (wrapperRef.current) {
-        wrapperRef.current.style.transform = `translate3d(${pos.x - SIZE / 2}px, ${pos.y - SIZE / 2}px, 0)`
+        const posX = e.clientX - currentConfig.offsetX
+        const posY = e.clientY - currentConfig.offsetY
+        wrapperRef.current.style.transform = `translate3d(${posX}px, ${posY}px, 0)`
       }
 
-      rafId = requestAnimationFrame(tick)
+      lastMouse = { x: e.clientX, y: e.clientY }
     }
 
-    if (!prefersReducedMotion) {
-      rafId = requestAnimationFrame(tick)
-    }
+    window.addEventListener('mousemove', handleMouseMove, { passive: true })
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove)
-      cancelAnimationFrame(rafId)
     }
   }, [])
+
+  const current = CONFIG[direction]
 
   return (
     <div
       ref={wrapperRef}
-      className="pointer-events-none fixed left-0 top-0 z-10 select-none drop-shadow-[0_0_18px_rgba(255,138,43,0.45)] transition-opacity duration-300"
-      style={{ width: SIZE, height: SIZE, willChange: 'transform' }}
+      className="pointer-events-none fixed left-0 top-0 z-50 select-none drop-shadow-[0_0_18px_rgba(255,138,43,0.45)]"
+      style={{
+        width: current.width,
+        height: current.height,
+        willChange: 'transform',
+      }}
     >
       <Image
-        src={SPRITES[direction]}
+        src={current.src}
         alt=""
-        width={SIZE}
-        height={SIZE}
+        width={current.width}
+        height={current.height}
         priority
         draggable={false}
+        style={{ objectFit: 'contain' }}
       />
     </div>
   )
