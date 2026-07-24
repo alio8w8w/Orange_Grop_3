@@ -4,7 +4,8 @@
 export type AdminRole = "superadmin" | "admin";
 
 export interface AdminProfile {
-  id: string; // auth.users.id din Supabase
+  admin_id: string; // auth.users.id din Supabase
+  user_id: string; // pentru a lega de utilizatorul Supabase
   email: string;
   nume_afisat: string;
   role: AdminRole;

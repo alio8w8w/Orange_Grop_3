@@ -1,7 +1,6 @@
 "use client";
 
 // components/admin/CVDashboard.tsx
-// Panoul principal: superadmin vede cardurile tuturor adminilor, adminul obișnuit editează direct CV-ul lui în aceeași interfață.
 
 import { useEffect, useState } from "react";
 import GlassPanel from "@/components/ui/GlassPanel";
@@ -30,9 +29,11 @@ export default function CVDashboard() {
       setEroare(null);
 
       try {
+        const profilAdminId = (profil as any).admin_id;
+
         if (esteSuperadmin) {
           const [rezAdmini, rezCvuri] = await Promise.all([
-            supabase.from("profiles").select("*").order("created_at"),
+            supabase.from("admin_profiles").select("*").order("created_at"),
             supabase.from("cvs").select("*"),
           ]);
 
@@ -42,24 +43,26 @@ export default function CVDashboard() {
           const admini = (rezAdmini.data ?? []) as AdminProfile[];
           const cvuri = (rezCvuri.data ?? []) as CV[];
 
-          const combinate: RandCV[] = admini.map((admin) => ({
-            admin,
-            cv: cvuri.find((c) => c.admin_id === admin.id) ?? null,
-          }));
+          const combinate: RandCV[] = admini.map((admin) => {
+            const currentAdminId = (admin as any).admin_id;
+            return {
+              admin,
+              cv: cvuri.find((c) => c.admin_id === currentAdminId) ?? null,
+            };
+          });
 
           setRanduri(combinate);
         } else {
-          // Admin obișnuit: incarca doar propriul CV și îl selectează automat pentru randare în interfață
           const { data: cvProprie, error } = await supabase
             .from("cvs")
             .select("*")
-            .eq("admin_id", profil.id)
+            .eq("admin_id", profilAdminId)
             .maybeSingle();
 
           if (error) throw error;
 
           setRanduri([{ admin: profil, cv: (cvProprie as CV) ?? null }]);
-          setAdminSelectat(profil.id);
+          setAdminSelectat(profilAdminId);
         }
       } catch (err) {
         setEroare(err instanceof Error ? err.message : "A apărut o eroare la încărcarea datelor.");
@@ -83,10 +86,10 @@ export default function CVDashboard() {
     );
   }
 
-  // Dacă un admin este selectat, deschidem editorul direct în aceeași interfață (fără pagini/url-uri separate)
   if (adminSelectat) {
-    const rand = randuri.find((r) => r.admin.id === adminSelectat);
+    const rand = randuri.find((r) => (r.admin as any).admin_id === adminSelectat);
     if (rand) {
+      const realAdminId = (rand.admin as any).admin_id;
       return (
         <div className="ogw-editor-wrapper">
           {esteSuperadmin && (
@@ -100,11 +103,11 @@ export default function CVDashboard() {
             </button>
           )}
           <CVEditor
-            adminId={rand.admin.id}
+            adminId={realAdminId}
             cvInitial={rand.cv}
             onSalvat={(cvNou) =>
               setRanduri((prev) =>
-                prev.map((r) => (r.admin.id === rand.admin.id ? { ...r, cv: cvNou } : r))
+                prev.map((r) => ((r.admin as any).admin_id === realAdminId ? { ...r, cv: cvNou } : r))
               )
             }
           />
@@ -113,27 +116,29 @@ export default function CVDashboard() {
     }
   }
 
-  // Panoul de carduri pentru superadmin așezat pe fundalul negru semitransparent
   return (
     <div className="ogw-grid ogw-grid--carduri">
-      {randuri.map(({ admin, cv }, i) => (
-        <GlassPanel key={admin.id} className="ogw-card-cv" intarziereReveal={i * 0.05}>
-          <div className="ogw-card-cv__avatar">
-            {admin.nume_afisat[0]?.toUpperCase() ?? "A"}
-          </div>
-          <h3 style={{ margin: "0.5rem 0", fontWeight: 600 }}>{admin.nume_afisat}</h3>
-          <p className="ogw-card-cv__status" style={{ opacity: 0.8, fontSize: "0.875rem", marginBottom: "1rem" }}>
-            {cv ? `Status: ${cv.status.replace("_", " ")}` : "Fără CV creat încă"}
-          </p>
-          <button 
-            type="button" 
-            className="ogw-btn ogw-btn--primar" 
-            onClick={() => setAdminSelectat(admin.id)}
-          >
-            {cv ? "Deschide & editează" : "Creează CV"}
-          </button>
-        </GlassPanel>
-      ))}
+      {randuri.map(({ admin, cv }, i) => {
+        const currentAdminId = (admin as any).admin_id;
+        return (
+          <GlassPanel key={currentAdminId} className="ogw-card-cv" intarziereReveal={i * 0.05}>
+            <div className="ogw-card-cv__avatar">
+              {admin.nume_afisat?.[0]?.toUpperCase() ?? "A"}
+            </div>
+            <h3 style={{ margin: "0.5rem 0", fontWeight: 600 }}>{admin.nume_afisat ?? "Administrator"}</h3>
+            <p className="ogw-card-cv__status" style={{ opacity: 0.8, fontSize: "0.875rem", marginBottom: "1rem" }}>
+              {cv ? `Status: ${cv.status?.replace("_", " ")}` : "Fără CV creat încă"}
+            </p>
+            <button 
+              type="button" 
+              className="ogw-btn ogw-btn--primar" 
+              onClick={() => setAdminSelectat(currentAdminId)}
+            >
+              {cv ? "Deschide & editează" : "Creează CV"}
+            </button>
+          </GlassPanel>
+        );
+      })}
     </div>
   );
 }
