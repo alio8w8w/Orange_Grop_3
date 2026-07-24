@@ -2,9 +2,6 @@
 
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 
-const MAX_ATTEMPTS = 3
-const LOCKOUT_DURATION_HOURS = 3
-
 // Verificare Cloudflare Turnstile
 async function verifyTurnstile(token: string) {
   console.log('[DEBUG] Token primit de la frontend:', token ? token.substring(0, 15) + '...' : 'GOL/LIPSA')
@@ -47,34 +44,7 @@ async function verifyTurnstile(token: string) {
   }
 }
 
-// Verificare suspendare temporară (Anti-brute force)
-async function isEmailLockedOut(email: string) {
-  try {
-    const supabaseAdmin = await createAdminClient()
-
-    const threeHoursAgo = new Date()
-    threeHoursAgo.setHours(threeHoursAgo.getHours() - LOCKOUT_DURATION_HOURS)
-
-    const { count, error } = await supabaseAdmin
-      .from('login_attempts')
-      .select('*', { count: 'exact', head: true })
-      .eq('email', email)
-      .eq('is_successful', false)
-      .gte('attempted_at', threeHoursAgo.toISOString())
-
-    if (error) {
-      console.error('Eroare verificare lockout:', error)
-      return false
-    }
-
-    return (count || 0) >= MAX_ATTEMPTS
-  } catch (e) {
-    console.error('Eroare la crearea clientului admin Supabase:', e)
-    return false
-  }
-}
-
-// Înregistrare încercare login
+// Înregistrare încercare login (păstrată pentru istoric, dar fără blocare)
 async function recordAttempt(email: string, isSuccessful: boolean) {
   try {
     const supabaseAdmin = await createAdminClient()
@@ -105,11 +75,7 @@ export async function signIn(prevState: any, formData: FormData) {
     return { error: 'Validare bot eșuată. Reîncărcați pagina sau bifați verificarea Turnstile.' }
   }
 
-  // 2. Verificare Lockout (Anti Brute-Force)
-  const lockedOut = await isEmailLockedOut(email)
-  if (lockedOut) {
-    return { error: `Prea multe încercări eșuate. Contul este suspendat temporar (${LOCKOUT_DURATION_HOURS} ore).` }
-  }
+  // 2. Verificarea de lockout a fost scoasă complet de aici.
 
   const supabase = await createClient()
 
@@ -122,7 +88,6 @@ export async function signIn(prevState: any, formData: FormData) {
   })
 
   if (error) {
-    // Afișăm eroarea completă în log-urile de pe Vercel pentru diagnosticare exactă
     console.error('[SUPABASE ERROR DETAILED]:', error)
     await recordAttempt(email, false)
     
