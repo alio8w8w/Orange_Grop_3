@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import WaveBackground from '@/components/auth/WaveBackground'
+import WaveBackground from '@/components/general/Wavebackground'
 import Mascot from '@/components/auth/Mascot'
 import LocaleToggle from '@/components/general/Localetoggle'
 import PortalTransition from '@/components/general/Portaltransition'
