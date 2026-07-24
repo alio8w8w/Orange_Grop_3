@@ -3,7 +3,7 @@
 import { ReactNode } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import AnimatedWaveBackground from '@/components/ui/Animatedwavebackground'
+import AnimatedWaveBackground from '@/components/general/Wavebackground'
 import Mascot from '@/components/auth/Mascot'
 import { useAuth } from '@/lib/auth-context'
 
