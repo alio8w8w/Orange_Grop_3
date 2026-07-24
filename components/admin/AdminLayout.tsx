@@ -23,7 +23,7 @@ export default function AdminLayout({ children, titluPagina }: AdminLayoutProps)
 
       {/* Mascota interactivă pentru mouse */}
       <div style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 50, pointerEvents: "none" }}>
-        <Mascot marime={64} />
+        <Mascot />
       </div>
 
       {/* Sidebar stilizat */}

@@ -8,7 +8,7 @@ export interface AdminProfile {
   email: string;
   nume_afisat: string;
   role: AdminRole;
-  avatar_url?: string | null;
+  poza_url: string | null;
   created_at: string;
 }
 
