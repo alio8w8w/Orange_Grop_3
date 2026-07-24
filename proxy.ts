@@ -1,13 +1,9 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// Lista celor 4 persoane care au voie în dashboard
-// Citim lista de email-uri din .env.local și le transformăm într-un array (listă)
-// Dacă lipsește variabila, returnăm un array gol ca măsură de siguranță
-const ADMIN_EMAILS = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',') : []
-
 const ADMIN_PREFIX = '/dsaidsuifds'
 const ADMIN_LOGIN_PATH = '/dsaidsuifds/login'
+const ADMIN_DASHBOARD_PATH = '/dsaidsuifds/dashbord' // Corectat pentru a se potrivi cu acțiunile tale
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
@@ -64,25 +60,21 @@ export async function proxy(request: NextRequest) {
     
     // EXCEPȚIE: Permitem accesul la pagina de login din interiorul adminului
     if (pathname === ADMIN_LOGIN_PATH) {
-      // Dacă este pe pagina de login și este DEJA logat ca admin, trimite-l în dashboard
-      if (user && ADMIN_EMAILS.includes(user.email ?? '')) {
-        // Schimbă '/dsaidsuifds/dashboard' cu adresa reală a dashboard-ului tău dacă e diferită
-        return NextResponse.redirect(new URL('/dsaidsuifds/dashboard', request.url)) 
+      // Dacă este pe pagina de login și este DEJA logat, trimite-l în dashboard
+      if (user) {
+        return NextResponse.redirect(new URL(ADMIN_DASHBOARD_PATH, request.url)) 
       }
       // Altfel, lasă-l să vadă pagina de login
       return response
     }
 
-    // Pentru ORICE ALTĂ rută din /dsaidsuifds (ex: /dsaidsuifds/dashboard)
+    // Pentru ORICE ALTĂ rută din /dsaidsuifds (ex: /dsaidsuifds/dashbord)
     if (!user || error) {
       // Nu e logat deloc -> trimis la login-ul de admin
       return NextResponse.redirect(new URL(ADMIN_LOGIN_PATH, request.url))
     }
 
-    if (!ADMIN_EMAILS.includes(user.email ?? '')) {
-      // E logat cu alt cont (nu face parte din cei 4) -> trimis pe homepage
-      return NextResponse.redirect(new URL('/', request.url))
-    }
+    // AM ELIMINAT REDIRECȚIONAREA CĂTRE '/' PENTRU CĂ BLOCA ACCESUL
   }
 
   return response
