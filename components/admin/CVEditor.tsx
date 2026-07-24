@@ -60,7 +60,7 @@ function Eticheta({ text, obligatoriu }: { text: string; obligatoriu?: boolean }
 
 export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps) {
   const [cv, setCv] = useState<CV>(cvInitial ?? cvGol(adminId));
-  const [etapaActiva, setEtapaActiva] = useState<number>(1); // Gestionarea etapelor pentru meniul de sus
+  const [etapaActiva, setEtapaActiva] = useState<number>(1);
 
   const [hardSkillNou, setHardSkillNou] = useState("");
   const [nivelHard, setNivelHard] = useState<number>(3);
@@ -169,8 +169,8 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
     setSeSalveaza(true);
     setMesaj(null);
 
-    // Pregătire payload curat: câmpurile goale devin null pentru a fi salvate corect în baza de date
     const payload = {
+      ...(cv.id ? { id: cv.id } : {}),
       admin_id: adminId,
       nume: cv.nume || null,
       prenume: cv.prenume || null,
@@ -194,11 +194,9 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
       updated_at: new Date().toISOString(),
     };
 
-    const dateDeSalvat = cv.id ? { id: cv.id, ...payload } : { ...payload, created_at: new Date().toISOString() };
-
     const { data, error } = await supabase
       .from("cvs")
-      .upsert(dateDeSalvat)
+      .upsert(payload as any)
       .select()
       .single();
 
@@ -275,7 +273,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
 
   return (
     <div className="ogw-editor">
-      {/* --- MENIU ETAPE SUS (sub salut) --- */}
+      {/* --- MENIU ETAPE SUS --- */}
       <div className="ogw-steps-menu" style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
         {[
           { id: 1, label: "1. Info Generale" },
@@ -429,7 +427,6 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
         <GlassPanel className="ogw-editor__sectiune">
           <h2>Etapa 4: Competențe & Limbi Străine</h2>
           
-          {/* Hard Skills */}
           <div style={{ marginBottom: "1rem" }}>
             <Eticheta text="Hard Skills" />
             <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -443,7 +440,6 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             </div>
           </div>
 
-          {/* Soft Skills */}
           <div style={{ marginBottom: "1rem" }}>
             <Eticheta text="Soft Skills" />
             <div style={{ display: "flex", gap: "0.5rem" }}>
