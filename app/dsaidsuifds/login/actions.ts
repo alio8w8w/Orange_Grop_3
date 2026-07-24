@@ -75,12 +75,22 @@ export async function signIn(prevState: any, formData: FormData) {
     return { error: 'Validare bot eșuată. Reîncărcați pagina sau bifați verificarea Turnstile.' }
   }
 
-  // 2. Verificarea de lockout a fost scoasă complet de aici.
+  const supabaseAdmin = createAdminClient()
 
-  const supabase = await createClient()
+  // 2. Verificare dacă emailul este înregistrat în tabelul de admini
+  const { data: adminRecord, error: adminError } = await supabaseAdmin
+    .from('admin_profiles')
+    .select('email')
+    .eq('email', email)
+    .single()
 
-  // 3. Trimitere OTP pe Email
-  const { error } = await supabase.auth.signInWithOtp({
+  if (adminError || !adminRecord) {
+    await recordAttempt(email, false)
+    return { error: 'Acces neautorizat. Această adresă de email nu este înregistrată ca administrator.' }
+  }
+
+  // 3. Trimitere OTP pe Email folosind clientul Admin
+  const { error } = await supabaseAdmin.auth.signInWithOtp({
     email,
     options: {
       shouldCreateUser: false, // Blochează crearea de conturi noi neautorizate
