@@ -360,7 +360,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             <FileUploadField
               eticheta="Fotografie de profil (cu indicator de încărcare)"
               adminId={adminId}
-              bucket="cv-poze"
+              bucket="poze"
               onIncarcat={(url) => {
                 actualizeaza("poza_url", url);
                 setSeIncarcaFisier(false);
