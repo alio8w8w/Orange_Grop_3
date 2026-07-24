@@ -1,13 +1,5 @@
 "use client";
 
-// lib/auth-context.tsx
-// Gestioneaza sesiunea celor 4 administratori.
-// Restrictia "fiecare isi vede doar CV-ul lui" se aplica in DOUA locuri,
-// niciodata doar in interfata:
-//   1) Row Level Security in Supabase (vezi supabase/schema.sql) — bariera reala.
-//   2) Aici, ca sa filtram si sa afisam corect in UI.
-// Superadmin-ul are role = "superadmin" si o policy separata care ii da acces la tot.
-
 import {
   createContext,
   useContext,
@@ -33,18 +25,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     async function incarcaProfil() {
+      console.log("[DEBUG 1] Încep verificarea sesiunii în AuthProvider...");
+
       const {
         data: { session },
+        error: sessionError
       } = await supabase.auth.getSession();
 
+      if (sessionError) {
+        console.error("[EROARE ❌] Nu am putut obține sesiunea Supabase:", sessionError.message);
+      }
+
       if (!session) {
+        console.warn("[STOP ⛔] Sesiunea este null (Utilizatorul NU este logat în Supabase Auth).");
         setProfil(null);
         setSeIncarca(false);
         return;
       }
 
-      // Profilul (nume, rol) e citit din tabela "admin_profiles", populata manual
-      // pentru cei 4 conturi admise — nu se pot inregistra alti useri din UI.
+      console.log("[SUCCES ✅] Sesiune găsită pentru user ID:", session.user.id, "Email:", session.user.email);
+
+      // Căutăm profilul în admin_profiles
+      console.log("[DEBUG 2] Caut în tabela 'admin_profiles' după id:", session.user.id);
+      
       const { data, error } = await supabase
         .from("admin_profiles")
         .select("*")
@@ -52,17 +55,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (error) {
-        console.error("[auth] nu am putut incarca profilul:", error.message);
+        console.error("[EROARE ❌] Supabase a dat eroare la interogarea 'admin_profiles':", error.message, error.details, error.hint);
         setProfil(null);
+      } else if (!data) {
+        console.error("[STOP ⛔] Sesiunea există, DAR userul cu acest ID NU a fost găsit în tabela 'admin_profiles'!");
       } else {
+        console.log("[SUCCES 🚀] Profil găsit în 'admin_profiles':", data);
         setProfil(data as AdminProfile);
       }
+
       setSeIncarca(false);
     }
 
     incarcaProfil();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("[EVENT 🔄 Auth State Schimbat]:", event, session?.user?.email);
       incarcaProfil();
     });
 
@@ -90,6 +98,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth trebuie folosit in interiorul AuthProvider");
+  if (!ctx) throw new Error("useAuth trebuie folosit în interiorul AuthProvider");
   return ctx;
 }
