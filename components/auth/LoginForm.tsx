@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useActionState } from 'react'
+import { useEffect, useState, useActionState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
@@ -34,8 +34,19 @@ export default function LoginForm() {
   const [signInState, signInAction] = useActionState(signIn, initialSignInState)
   const [verifyState, verifyAction] = useActionState(verifyOTP, initialVerifyState)
   const [turnstileToken, setTurnstileToken] = useState('')
+  
+  // Referință pentru a putea goli token-ul și forța reîncărcarea widget-ului la eroare
+  const formRef = useRef<HTMLFormElement>(null)
 
   const step: 'credentials' | 'otp' = signInState.success ? 'otp' : 'credentials'
+
+  // Dacă primim o eroare de la server, resetăm token-ul ca să poată genera altul nou
+  useEffect(() => {
+    if (signInState.error) {
+      setTurnstileToken('')
+      // Opțional: putem goli formularul dacă dorim
+    }
+  }, [signInState])
 
   useEffect(() => {
     if (verifyState.success && verifyState.redirectTo) {
@@ -64,7 +75,7 @@ export default function LoginForm() {
 
         {/* PASUL 1: INTRODUCERE EMAIL */}
         {step === 'credentials' && (
-          <form action={signInAction} className="auth-form">
+          <form ref={formRef} action={signInAction} className="auth-form">
             <h1 className="auth-form__title">Autentificare Admin</h1>
             <p className="auth-form__subtitle">
               Acces restricționat. Introdu adresa ta de email.
@@ -84,7 +95,7 @@ export default function LoginForm() {
             <div className="auth-turnstile-container">
               <TurnstileWidget onVerify={setTurnstileToken} />
               
-              {/* Câmp ascuns care transmite token-ul Turnstile către Server Action */}
+              {/* Câmp ascuns care transmite token-ul proaspăt */}
               <input
                 type="hidden"
                 name="cf-turnstile-response"
@@ -98,11 +109,14 @@ export default function LoginForm() {
               </p>
             )}
 
-            <SubmitButton>Trimite codul de acces</SubmitButton>
+            {/* Dezactivăm butonul dacă token-ul nu este generat încă */}
+            <SubmitButton>
+              Trimite codul de acces
+            </SubmitButton>
           </form>
         )}
 
-        {/* PASUL 2: VERIFICARE COD OTP (8 CIFRE) SAU CLICK PE LINK */}
+        {/* PASUL 2: VERIFICARE COD OTP (8 CIFRE) */}
         {step === 'otp' && (
           <form action={verifyAction} className="auth-form">
             <h1 className="auth-form__title">Verificare Email</h1>
@@ -111,10 +125,8 @@ export default function LoginForm() {
                 'Introdu codul din 8 cifre trimis pe email sau apasă pe link-ul primit.'}
             </p>
 
-            {/* Transmitere email ascuns pentru etapa de verificare */}
             <input type="hidden" name="email" value={signInState.email || ''} />
 
-            {/* OTP setat pe 8 cifre (conform configurării tale din Supabase) */}
             <OtpInput name="code" length={8} />
 
             {verifyState.error && (
@@ -139,7 +151,6 @@ export default function LoginForm() {
           font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
           background-color: #0c0705;
         }
-
         .auth-card {
           position: relative;
           z-index: 5;
@@ -151,98 +162,37 @@ export default function LoginForm() {
           backdrop-filter: blur(22px) saturate(140%);
           -webkit-backdrop-filter: blur(22px) saturate(140%);
           border: 1px solid rgba(255, 179, 71, 0.18);
-          box-shadow:
-            0 24px 60px rgba(0, 0, 0, 0.55),
-            0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
         }
-
         .auth-card__seam {
           position: absolute;
-          top: 0;
-          left: 12%;
-          right: 12%;
-          height: 1px;
+          top: 0; left: 12%; right: 12%; height: 1px;
           background: linear-gradient(90deg, transparent, #ff8a2b, transparent);
           opacity: 0.7;
         }
-
         .auth-card__logo {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 1.75rem;
+          display: flex; align-items: center; justify-content: center; margin-bottom: 1.75rem;
         }
-
-        .auth-card__logo-img {
-          object-fit: contain;
-          height: auto;
-        }
-
-        .auth-form {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
+        .auth-card__logo-img { object-fit: contain; height: auto; }
+        .auth-form { display: flex; flex-direction: column; gap: 1rem; }
         .auth-form__title {
           font-family: var(--font-display, 'Space Grotesk', sans-serif);
-          font-size: 1.4rem;
-          font-weight: 700;
-          color: #ffe9d6;
-          text-align: center;
-          margin: 0;
+          font-size: 1.4rem; font-weight: 700; color: #ffe9d6; text-align: center; margin: 0;
         }
-
         .auth-form__subtitle {
-          font-size: 0.85rem;
-          color: rgba(255, 233, 214, 0.6);
-          text-align: center;
-          margin: -0.5rem 0 0.25rem;
-          line-height: 1.4;
+          font-size: 0.85rem; color: rgba(255, 233, 214, 0.6); text-align: center; margin: -0.5rem 0 0.25rem;
         }
-
-        .auth-field {
-          display: flex;
-          flex-direction: column;
-          gap: 0.4rem;
-          font-size: 0.8rem;
-          color: rgba(255, 233, 214, 0.75);
-        }
-
+        .auth-field { display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.8rem; color: rgba(255, 233, 214, 0.75); }
         .auth-field input {
-          padding: 0.7rem 0.85rem;
-          border-radius: 0.7rem;
+          padding: 0.7rem 0.85rem; border-radius: 0.7rem;
           border: 1px solid rgba(255, 138, 43, 0.2);
-          background: rgba(20, 10, 6, 0.5);
-          color: #ffe9d6;
-          font-size: 0.95rem;
-          outline: none;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+          background: rgba(20, 10, 6, 0.5); color: #ffe9d6; font-size: 0.95rem; outline: none;
         }
-
-        .auth-field input:focus {
-          border-color: rgba(255, 179, 71, 0.8);
-          box-shadow: 0 0 0 3px rgba(255, 138, 43, 0.18);
-        }
-
-        .auth-turnstile-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          margin: 0.25rem 0;
-          min-height: 65px;
-        }
-
+        .auth-field input:focus { border-color: rgba(255, 179, 71, 0.8); box-shadow: 0 0 0 3px rgba(255, 138, 43, 0.18); }
+        .auth-turnstile-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0.25rem 0; min-height: 65px; }
         .auth-form__error {
-          font-size: 0.82rem;
-          color: #ffb4a0;
-          background: rgba(179, 35, 10, 0.18);
-          border: 1px solid rgba(255, 106, 26, 0.35);
-          border-radius: 0.6rem;
-          padding: 0.55rem 0.75rem;
-          text-align: center;
-          margin: 0;
+          font-size: 0.82rem; color: #ffb4a0; background: rgba(179, 35, 10, 0.18);
+          border: 1px solid rgba(255, 106, 26, 0.35); border-radius: 0.6rem; padding: 0.55rem 0.75rem; text-align: center; margin: 0;
         }
       `}</style>
     </main>
