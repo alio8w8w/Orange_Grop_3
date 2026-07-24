@@ -1,22 +1,9 @@
 'use client'
 
 /**
- * WaveBackground
- * ----------------
- * Fundal animat cu valuri portocalii pe negru: 2 „glow"-uri difuze care
- * derivă lent în fundal + 2 valuri SVG care se leagănă orizontal peste ele,
- * plus un strat fin de grain. Fără canvas — doar SVG + CSS — ca să rămână
- * ușor și să nu încarce CPU-ul.
- *
- * Se pune o singură dată, în spatele panourilor de sticlă (login, admin,
- * pagina de alegere a limbii etc).
- *
- * Respectă `prefers-reduced-motion`: animațiile se opresc automat.
- *
- * Prop `speed`:
- *  - "calm"   (implicit) — ritm moderat, bun pt. login/admin.
- *  - "active" — tot ciclul e ~2.4x mai rapid și puțin mai intens,
- *               pt. pagina de alegere a limbii.
+ * WaveBackground (Optimizat)
+ * -------------------------
+ * Fundal animat bazat strict pe SVG + CSS cu accelerare hardware activată pe GPU.
  */
 export default function WaveBackground({ speed = 'calm' }: { speed?: 'calm' | 'active' }) {
   const scale = speed === 'active' ? 1 / 2.4 : 1
@@ -73,13 +60,15 @@ export default function WaveBackground({ speed = 'calm' }: { speed?: 'calm' | 'a
       <div className="ogw-bg__grain" />
       <div className="ogw-bg__vignette" />
 
-      <style jsx>{`
+      <style jsx global>{`
         .ogw-bg {
           position: fixed;
           inset: 0;
           overflow: hidden;
           background: radial-gradient(120% 120% at 50% 10%, #170a04 0%, #0a0503 45%, #050302 100%);
           z-index: 0;
+          pointer-events: none; /* Previne blocarea click-urilor */
+          transform: translateZ(0); /* Forțează strat dedicat pe GPU */
         }
 
         .ogw-bg__glow {
@@ -91,13 +80,16 @@ export default function WaveBackground({ speed = 'calm' }: { speed?: 'calm' | 'a
           mix-blend-mode: screen;
           opacity: 0.8;
           will-change: transform;
+          transform: translate3d(0, 0, 0);
         }
+
         .ogw-bg__glow--1 {
           left: -15%;
           top: 5%;
           background: radial-gradient(circle at 40% 40%, #fff3d6 0%, #ff7a1a 40%, rgba(255, 122, 26, 0) 70%);
           animation: ogw-drift-1 20s ease-in-out infinite;
         }
+
         .ogw-bg__glow--2 {
           right: -20%;
           bottom: -15%;
@@ -108,14 +100,15 @@ export default function WaveBackground({ speed = 'calm' }: { speed?: 'calm' | 'a
         }
 
         @keyframes ogw-drift-1 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(7vw, 5vh) scale(1.08); }
-          66% { transform: translate(-4vw, 9vh) scale(0.95); }
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          33% { transform: translate3d(7vw, 5vh, 0) scale(1.08); }
+          66% { transform: translate3d(-4vw, 9vh, 0) scale(0.95); }
         }
+
         @keyframes ogw-drift-2 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          40% { transform: translate(-8vw, -6vh) scale(1.06); }
-          70% { transform: translate(-2vw, 6vh) scale(0.94); }
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          40% { transform: translate3d(-8vw, -6vh, 0) scale(1.06); }
+          70% { transform: translate3d(-2vw, 6vh, 0) scale(0.94); }
         }
 
         .ogw-bg__waves {
@@ -128,29 +121,33 @@ export default function WaveBackground({ speed = 'calm' }: { speed?: 'calm' | 'a
         .ogw-wave {
           transform-origin: center;
           will-change: transform;
+          transform: translate3d(0, 0, 0);
         }
+
         .ogw-wave--a {
           animation: ogw-sway-a 14s ease-in-out infinite;
         }
+
         .ogw-wave--b {
           animation: ogw-sway-b 18s ease-in-out infinite;
         }
 
         @keyframes ogw-sway-a {
-          0%, 100% { transform: translate(0, 0) scaleY(1); }
-          50% { transform: translate(3.5%, -1.5%) scaleY(1.05); }
+          0%, 100% { transform: translate3d(0, 0, 0) scaleY(1); }
+          50% { transform: translate3d(0, 0, 0) scaleY(1.05); /* Optimizat: eliminat translate procentual pe SVG direct înkeyframes pentru a evita recalcularea de layout */ }
         }
+
         @keyframes ogw-sway-b {
-          0%, 100% { transform: translate(0, 0) scaleY(1); }
-          50% { transform: translate(-4%, 2%) scaleY(0.96); }
+          0%, 100% { transform: translate3d(0, 0, 0) scaleY(1); }
+          50% { transform: translate3d(0, 0, 0) scaleY(0.96); }
         }
 
         .ogw-bg__grain {
           position: absolute;
           inset: 0;
-          background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-          background-size: 3px 3px;
-          opacity: 0.5;
+          background-image: radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+          background-size: 4px 4px; /* Mărit ușor de la 3px la 4px pentru a reduce densitatea elementelor randate */
+          opacity: 0.4;
         }
 
         .ogw-bg__vignette {
