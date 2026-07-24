@@ -122,12 +122,14 @@ export async function signIn(prevState: any, formData: FormData) {
   })
 
   if (error) {
+    // Afișăm eroarea completă în log-urile de pe Vercel pentru diagnosticare exactă
+    console.error('[SUPABASE ERROR DETAILED]:', error)
     await recordAttempt(email, false)
     
     if (error.status === 429) {
       return { error: 'Prea multe solicitări trimise. Așteptați câteva minute.' }
     }
-    return { error: error.message || 'A apărut o eroare la trimiterea codului. Încercați din nou.' }
+    return { error: `Eroare Supabase: ${error.message}` }
   } else {
     await recordAttempt(email, true)
   }
