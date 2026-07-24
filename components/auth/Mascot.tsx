@@ -5,14 +5,18 @@ import Image from 'next/image'
 
 type Direction = 'up' | 'down' | 'left' | 'right' | 'static'
 
-// ⚙️ Coordonate exacte (offsetX și offsetY) astfel încât punctul unde se întâlnesc mâinile să fie fix pe cursor
+// ⚙️ Dimensiunile lățimii/înălțimii imaginii și offset-urile ajustate:
+// Pentru 'left': mâinile sunt în dreapta imaginii, dar vrem ca mouse-ul să fie cu 30% mai la stânga față de centru,
+// adică la 80% din lățime (lățime 110 -> offsetX = 88, adică 110 * 0.8).
+// Pentru 'right': mâinile sunt în stânga imaginii, iar mouse-ul trebuie să fie cu 30% mai la dreapta față de centru,
+// adică la 20% din lățime (110 * 0.2 = 22).
 const CONFIG: Record<Direction, { src: string; width: number; height: number; offsetX: number; offsetY: number }> = {
   static: {
     src: '/mascot/static.png',
     width: 90,
     height: 100,
-    offsetX: 45, // Mijlocul lățimii (unde se unesc mâinile sus)
-    offsetY: 15, // Partea de sus a mâinilor
+    offsetX: 45,
+    offsetY: 15,
   },
   up: {
     src: '/mascot/up.png',
@@ -32,22 +36,26 @@ const CONFIG: Record<Direction, { src: string; width: number; height: number; of
     src: '/mascot/left.png',
     width: 110,
     height: 85,
-    offsetX: 95, // Mâinile sunt în partea dreaptă a imaginii când se uită la stânga
-    offsetY: 42, // La mijlocul înălțimii
+    offsetX: 88, // 80% din lățime (mută imaginea mai la dreapta față de mouse, deci mouse-ul pare că ține de mâini care sunt la stânga relativ la offset)
+    offsetY: 42,
   },
   right: {
     src: '/mascot/right.png',
     width: 110,
     height: 85,
-    offsetX: 15, // Mâinile sunt în partea stângă a imaginii când se uită la dreapta
-    offsetY: 42, // La mijlocul înălțimii
+    offsetX: 22, // 20% din lățime (mută imaginea mai la stânga față de mouse, mâinile fiind în stânga imaginii)
+    offsetY: 42,
   },
 }
 
 export default function Mascot() {
   const wrapperRef = useRef<HTMLDivElement>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
   const [direction, setDirection] = useState<Direction>('static')
+  
   const directionRef = useRef<Direction>('static')
+  const mousePos = useRef({ x: 0, y: 0 })
+  const rafId = useRef<number | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -55,13 +63,14 @@ export default function Mascot() {
     let lastMouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
 
     const handleMouseMove = (e: MouseEvent) => {
+      mousePos.current = { x: e.clientX, y: e.clientY }
+
       const dx = e.clientX - lastMouse.x
       const dy = e.clientY - lastMouse.y
       const dist = Math.hypot(dx, dy)
 
       let nextDir: Direction = directionRef.current
 
-      // Prag mic pentru a schimba direcția fin și rapid
       if (dist < 2) {
         nextDir = 'static'
       } else if (Math.abs(dx) > Math.abs(dy)) {
@@ -75,21 +84,27 @@ export default function Mascot() {
         setDirection(nextDir)
       }
 
-      // Poziționare instantanee bazată pe offset-ul mâinilor
-      const currentConfig = CONFIG[nextDir]
-      if (wrapperRef.current) {
-        const posX = e.clientX - currentConfig.offsetX
-        const posY = e.clientY - currentConfig.offsetY
-        wrapperRef.current.style.transform = `translate3d(${posX}px, ${posY}px, 0)`
-      }
-
       lastMouse = { x: e.clientX, y: e.clientY }
     }
 
+    // Folosim un loop prin requestAnimationFrame pentru a rula poziționarea la 60/120fps fluid, 
+    // complet decuplat de frecvența evenimentului de mousemove.
+    const updatePosition = () => {
+      const currentConfig = CONFIG[directionRef.current]
+      if (wrapperRef.current) {
+        const posX = mousePos.current.x - currentConfig.offsetX
+        const posY = mousePos.current.y - currentConfig.offsetY
+        wrapperRef.current.style.transform = `translate3d(${posX}px, ${posY}px, 0)`
+      }
+      rafId.current = requestAnimationFrame(updatePosition)
+    }
+
     window.addEventListener('mousemove', handleMouseMove, { passive: true })
+    rafId.current = requestAnimationFrame(updatePosition)
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove)
+      if (rafId.current) cancelAnimationFrame(rafId.current)
     }
   }, [])
 
@@ -103,9 +118,11 @@ export default function Mascot() {
         width: current.width,
         height: current.height,
         willChange: 'transform',
+        transform: 'translate3d(-9999px, -9999px, 0)', // Ascuns inițial până la prima mișcare
       }}
     >
       <Image
+        ref={imgRef}
         src={current.src}
         alt="Mascot"
         width={current.width}

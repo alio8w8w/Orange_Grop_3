@@ -1,17 +1,12 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 /**
  * OtpInput
  * --------
- * Câmp segmentat pentru codul TOTP. Fiecare cifră e o „cărbune" care se
+ * Câmp segmentat pentru codul TOTP. Fiecare cifră e un „cărbune" care se
  * aprinde (glow portocaliu) când e completată — ecou vizual al fundalului.
- *
- * IMPORTANT: Supabase TOTP folosește standard 6 cifre (RFC 6238). Am pus
- * `length={8}` mai jos pentru că așa ai cerut, dar dacă factorul TOTP din
- * Supabase generează coduri de 6 cifre, verify-ul va eșua mereu cu 8 căsuțe.
- * Schimbă length={6} dacă nu ai un generator custom de 8 cifre.
  */
 export default function OtpInput({
   length = 8,
@@ -22,45 +17,65 @@ export default function OtpInput({
   name: string
   onComplete?: (code: string) => void
 }) {
-  const [digits, setDigits] = useState<string[]>(Array(length).fill(''))
+  const [digits, setDigits] = useState<string[]>(() => Array(length).fill(''))
   const inputsRef = useRef<(HTMLInputElement | null)[]>([])
 
-  const emitIfComplete = (next: string[]) => {
-    const code = next.join('')
-    if (code.length === length && !next.includes('')) {
-      onComplete?.(code)
+  const emitIfComplete = useCallback(
+    (next: string[]) => {
+      const code = next.join('')
+      if (code.length === length && !next.includes('')) {
+        onComplete?.(code)
+      }
+    },
+    [length, onComplete]
+  )
+
+  const handleChange = useCallback(
+    (index: number, value: string) => {
+      const clean = value.replace(/[^0-9]/g, '').slice(-1)
+      setDigits((prev) => {
+        const next = [...prev]
+        next[index] = clean
+        emitIfComplete(next)
+        return next
+      })
+
+      if (clean && index < length - 1) {
+        inputsRef.current[index + 1]?.focus()
+      }
+    },
+    [length, emitIfComplete]
+  )
+
+  const handleKeyDown = useCallback((index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && index > 0) {
+      setDigits((prev) => {
+        if (!prev[index]) {
+          inputsRef.current[index - 1]?.focus()
+        }
+        return prev
+      })
     }
-  }
+  }, [])
 
-  const handleChange = (index: number, value: string) => {
-    const clean = value.replace(/[^0-9]/g, '').slice(-1)
-    const next = [...digits]
-    next[index] = clean
-    setDigits(next)
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLInputElement>) => {
+      const pasted = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, length)
+      if (!pasted) return
+      e.preventDefault()
 
-    if (clean && index < length - 1) {
-      inputsRef.current[index + 1]?.focus()
-    }
-    emitIfComplete(next)
-  }
+      const next = Array(length).fill('')
+      pasted.split('').forEach((char, i) => {
+        next[i] = char
+      })
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !digits[index] && index > 0) {
-      inputsRef.current[index - 1]?.focus()
-    }
-  }
-
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const pasted = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, length)
-    if (!pasted) return
-    e.preventDefault()
-    const next = Array(length).fill('')
-    pasted.split('').forEach((char, i) => (next[i] = char))
-    setDigits(next)
-    const lastFilled = Math.min(pasted.length, length) - 1
-    inputsRef.current[Math.max(lastFilled, 0)]?.focus()
-    emitIfComplete(next)
-  }
+      setDigits(next)
+      const lastFilled = Math.min(pasted.length, length) - 1
+      inputsRef.current[Math.max(lastFilled, 0)]?.focus()
+      emitIfComplete(next)
+    },
+    [length, emitIfComplete]
+  )
 
   return (
     <div className="flex justify-center gap-2" role="group" aria-label="Cod de verificare">
@@ -68,7 +83,9 @@ export default function OtpInput({
       {digits.map((digit, i) => (
         <input
           key={i}
-          ref={(el) => { inputsRef.current[i] = el }}
+          ref={(el) => {
+            inputsRef.current[i] = el
+          }}
           type="text"
           inputMode="numeric"
           autoComplete={i === 0 ? 'one-time-code' : 'off'}
@@ -96,6 +113,8 @@ export default function OtpInput({
           border-radius: 0.6rem;
           outline: none;
           transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+          transform: translate3d(0, 0, 0);
+          will-change: border-color, box-shadow, background;
         }
         .otp-cell:focus {
           border-color: rgba(255, 179, 71, 0.8);

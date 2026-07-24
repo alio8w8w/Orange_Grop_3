@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 
 type Phase = 'idle' | 'swirl' | 'reveal' | 'flash' | 'done'
 
-const PHOTOS = ['/images/introduc1.png', '/images/introduc2.png', '/images/introduc3.png']
+const PHOTOS = ['/images/intro1.png', '/images/intro2.png', '/images/intro3.png']
 
 // Nume EXACTE așteptate în /public/images/. Dacă la tine sunt scrise altfel
 // (ex. "introduct3.png" cu typo), redenumește fișierele ca să se potrivească,

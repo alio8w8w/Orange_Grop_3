@@ -27,13 +27,15 @@ export default function SubmitButton({ children }: { children: React.ReactNode }
           cursor: pointer;
           box-shadow: 0 8px 24px rgba(255, 106, 26, 0.35);
           transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+          transform: translate3d(0, 0, 0);
+          will-change: transform, box-shadow;
         }
         .submit-btn:hover:not(:disabled) {
-          transform: translateY(-1px);
+          transform: translate3d(0, -1px, 0);
           box-shadow: 0 10px 28px rgba(255, 106, 26, 0.45);
         }
         .submit-btn:active:not(:disabled) {
-          transform: translateY(0);
+          transform: translate3d(0, 0, 0);
         }
         .submit-btn:disabled {
           opacity: 0.65;
