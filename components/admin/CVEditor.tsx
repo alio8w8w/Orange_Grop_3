@@ -204,6 +204,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
     setSeSalveaza(true);
     setMesaj(null);
 
+    // Verificare corectată pe coloana admin_id din admin_profiles
     const { data: adminExistent } = await supabase
       .from("admin_profiles")
       .select("admin_id")
