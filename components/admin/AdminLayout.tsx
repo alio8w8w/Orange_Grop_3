@@ -1,7 +1,6 @@
 "use client";
 
 // components/admin/AdminLayout.tsx
-// Layout-ul principal pentru panoul de administrare.
 
 import { ReactNode } from "react";
 import Image from "next/image";
@@ -24,14 +23,25 @@ export default function AdminLayout({ children, titluPagina }: AdminLayoutProps)
 
       {/* Mascota interactivă pentru mouse */}
       <div style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 50, pointerEvents: "none" }}>
-        <Mascot />
+        <Mascot marime={64} />
       </div>
 
-      {/* Sidebar cu fundal alb semitransparent, micșorat și rotunjit */}
+      {/* Sidebar stilizat */}
       <aside className="ogw-sidebar">
-        <div className="ogw-sidebar__logo">
-          <Image src="/images/logo.png" alt="Orange Group 3" width={38} height={38} priority />
-          <span>Orange_Group_3</span>
+        {/* Logo mărit și poziționat pe centru, cu textul Orange Group în 2 culori */}
+        <div className="ogw-sidebar__logo-container" style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "2rem", textAlign: "center" }}>
+          <Image 
+            src="/images/logo.png" 
+            alt="Orange Group 3" 
+            width={72} 
+            height={72} 
+            priority 
+            style={{ marginBottom: "0.5rem" }}
+          />
+          <span style={{ fontSize: "1.1rem", fontWeight: 700, letterSpacing: "-0.01em" }}>
+            <span style={{ color: "var(--primary)" }}>Orange</span>{" "}
+            <span style={{ color: "#1a1a1a" }}>Group 3</span>
+          </span>
         </div>
 
         <nav className="ogw-sidebar__nav">
@@ -48,13 +58,18 @@ export default function AdminLayout({ children, titluPagina }: AdminLayoutProps)
           )}
         </nav>
 
+        {/* Profilul adminului jos: Nume și Poza reală din DB */}
         <div className="ogw-sidebar__profil">
-          <div className="ogw-sidebar__avatar">
-            {profil?.nume_afisat?.[0]?.toUpperCase() ?? "?"}
+          <div className="ogw-sidebar__avatar" style={{ overflow: "hidden", position: "relative" }}>
+            {profil?.poza_url ? (
+              <img src={profil.poza_url} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <span>{profil?.nume_afisat?.[0]?.toUpperCase() ?? "?"}</span>
+            )}
           </div>
           <div style={{ overflow: "hidden" }}>
-            <p className="ogw-sidebar__nume" style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-              {profil?.nume_afisat ?? "..."}
+            <p className="ogw-sidebar__nume" style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", fontWeight: 600 }}>
+              {profil?.nume_afisat ?? "Administrator"}
             </p>
             <p className="ogw-sidebar__rol" style={{ fontSize: "0.75rem", opacity: 0.7 }}>
               {esteSuperadmin ? "Admin superior" : "Administrator"}
@@ -71,7 +86,7 @@ export default function AdminLayout({ children, titluPagina }: AdminLayoutProps)
         </div>
       </aside>
 
-      {/* Zona principală pe fundal negru semitransparent, micșorată cu 20% și complet rotunjită */}
+      {/* Zona principală */}
       <main className="ogw-main">
         <motion.header
           className="ogw-main__header"
