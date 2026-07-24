@@ -1,82 +1,57 @@
-import { createServerClient } from '@supabase/ssr'
+import { createBrowserClient } from '@supabase/ssr'
 
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
-import { cookies } from 'next/headers'
-
-
-
-// Client standard pentru Server (utilizează cookie-urile sesiunii curente)
-
-export async function createClient() {
-
-  const cookieStore = await cookies()
-
-
-
-  return createServerClient(
-
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-
-    {
-
-      cookies: {
-
-        getAll() {
-
-          return cookieStore.getAll()
-
-        },
-
-        setAll(cookiesToSet) {
-
-          try {
-
-            cookiesToSet.forEach(({ name, value, options }) =>
-
-              cookieStore.set(name, value, options)
-
-            )
-
-          } catch {
-
-            // Se ignoră dacă apelul este făcut dintr-un Server Component pur (read-only)
-
-          }
-
-        },
-
-      },
-
-    }
-
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn(
+    '[supabase] LIPSESC VARIABILELE DE MEDIU! Verifică configurarea din Vercel sau .env.local.'
   )
-
 }
-// Client Admin cu Service Role (bypassează RLS, acces complet la BD/Auth)
 
-export function createAdminClient() {
+// Clientul Supabase pentru browser / componente de client
+export const supabase = createBrowserClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key'
+)
 
-  return createSupabaseClient(
+// --- Bucket-uri de storage folosite în aplicație ---
+export const STORAGE_BUCKETS = {
+  poze: 'cv-poze',
+  documente: 'cv-documente', // diplome + certificate
+} as const
 
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+/**
+ * Încarcă un fișier într-un bucket și întoarce URL-ul public.
+ */
+export async function incarcaFisier(
+  bucket: keyof typeof STORAGE_BUCKETS,
+  adminId: string,
+  fisier: File
+): Promise<string> {
+  const extensie = fisier.name.split('.').pop()
+  const caleFisier = `${adminId}/${crypto.randomUUID()}.${extensie}`
 
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  const { error } = await supabase.storage
+    .from(STORAGE_BUCKETS[bucket])
+    .upload(caleFisier, fisier, { upsert: false })
 
-    {
+  if (error) throw error
 
-      auth: {
+  const { data } = supabase.storage
+    .from(STORAGE_BUCKETS[bucket])
+    .getPublicUrl(caleFisier)
 
-        persistSession: false,
+  return data.publicUrl
+}
 
-        autoRefreshToken: false,
+export async function stergeFisier(
+  bucket: keyof typeof STORAGE_BUCKETS,
+  caleFisier: string
+) {
+  const { error } = await supabase.storage
+    .from(STORAGE_BUCKETS[bucket])
+    .remove([caleFisier])
 
-      },
-
-    }
-
-  )
-
+  if (error) throw error
 }
