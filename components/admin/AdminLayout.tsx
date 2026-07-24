@@ -7,6 +7,7 @@ import { ReactNode } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import AnimatedWaveBackground from "@/components/general/Wavebackground";
+import Mascot from "@/components/auth/Mascot";
 import { useAuth } from "@/lib/auth-context";
 
 interface AdminLayoutProps {
@@ -21,10 +22,15 @@ export default function AdminLayout({ children, titluPagina }: AdminLayoutProps)
     <div className="ogw-shell">
       <AnimatedWaveBackground />
 
-      {/* Sidebar cu fundal alb semitransparent */}
+      {/* Mascota interactivă pentru mouse */}
+      <div style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 50, pointerEvents: "none" }}>
+        <Mascot />
+      </div>
+
+      {/* Sidebar cu fundal alb semitransparent, micșorat și rotunjit */}
       <aside className="ogw-sidebar">
         <div className="ogw-sidebar__logo">
-          <Image src="/images/logo.png" alt="Orange Group 3" width={44} height={44} priority />
+          <Image src="/images/logo.png" alt="Orange Group 3" width={38} height={38} priority />
           <span>Orange_Group_3</span>
         </div>
 
@@ -46,9 +52,11 @@ export default function AdminLayout({ children, titluPagina }: AdminLayoutProps)
           <div className="ogw-sidebar__avatar">
             {profil?.nume_afisat?.[0]?.toUpperCase() ?? "?"}
           </div>
-          <div>
-            <p className="ogw-sidebar__nume">{profil?.nume_afisat ?? "..."}</p>
-            <p className="ogw-sidebar__rol">
+          <div style={{ overflow: "hidden" }}>
+            <p className="ogw-sidebar__nume" style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+              {profil?.nume_afisat ?? "..."}
+            </p>
+            <p className="ogw-sidebar__rol" style={{ fontSize: "0.75rem", opacity: 0.7 }}>
               {esteSuperadmin ? "Admin superior" : "Administrator"}
             </p>
           </div>
@@ -63,7 +71,7 @@ export default function AdminLayout({ children, titluPagina }: AdminLayoutProps)
         </div>
       </aside>
 
-      {/* Zona principală pe fundal negru semitransparent */}
+      {/* Zona principală pe fundal negru semitransparent, micșorată cu 20% și complet rotunjită */}
       <main className="ogw-main">
         <motion.header
           className="ogw-main__header"
