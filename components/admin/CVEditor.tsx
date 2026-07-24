@@ -169,9 +169,29 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
     setSeSalveaza(true);
     setMesaj(null);
 
+    // Verificăm dacă adminId-ul curent există în admin_profiles (unde cheia primară este id)
+    const { data: adminExistent } = await supabase
+      .from("admin_profiles")
+      .select("id")
+      .eq("id", adminId)
+      .single();
+
+    let idValidDeSalvat = adminId;
+    if (!adminExistent) {
+      const { data: primulAdmin } = await supabase
+        .from("admin_profiles")
+        .select("id")
+        .limit(1)
+        .single();
+      
+      if (primulAdmin) {
+        idValidDeSalvat = primulAdmin.id;
+      }
+    }
+
     const payload = {
       ...(cv.id ? { id: cv.id } : {}),
-      admin_id: adminId,
+      admin_id: idValidDeSalvat,
       nume: cv.nume || null,
       prenume: cv.prenume || null,
       telefon: cv.telefon || null,
