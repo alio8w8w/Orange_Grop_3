@@ -3,7 +3,7 @@
 // components/admin/FileUploadField.tsx
 // Camp de incarcare fisiere (poza de profil / diplome / certificate) catre Supabase Storage.
 
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import { incarcaFisier, STORAGE_BUCKETS } from "@/lib/supabase/client";
 
 interface FileUploadFieldProps {
@@ -24,47 +24,56 @@ export default function FileUploadField({
   onIncarcat,
 }: FileUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [seIncarca, setSeIncarca] = useState(false);
+  const [seIncarca, startTransition] = useTransition();
   const [eroare, setEroare] = useState<string | null>(null);
 
   async function laSchimbare(e: React.ChangeEvent<HTMLInputElement>) {
     const fisiere = e.target.files;
     if (!fisiere || fisiere.length === 0) return;
 
-    setSeIncarca(true);
     setEroare(null);
 
-    try {
-      for (const fisier of Array.from(fisiere)) {
-        if (fisier.size > 10 * 1024 * 1024) {
-          throw new Error(`"${fisier.name}" depaseste 10MB.`);
+    startTransition(async () => {
+      try {
+        for (const fisier of Array.from(fisiere)) {
+          if (fisier.size > 10 * 1024 * 1024) {
+            throw new Error(`"${fisier.name}" depășește limita de 10MB.`);
+          }
+          const url = await incarcaFisier(bucket, adminId, fisier);
+          onIncarcat(url, fisier.name);
         }
-        const url = await incarcaFisier(bucket, adminId, fisier);
-        onIncarcat(url, fisier.name);
+      } catch (err) {
+        setEroare(err instanceof Error ? err.message : "Încărcarea a eșuat.");
+      } finally {
+        if (inputRef.current) {
+          inputRef.current.value = "";
+        }
       }
-    } catch (err) {
-      setEroare(err instanceof Error ? err.message : "Incarcarea a esuat.");
-    } finally {
-      setSeIncarca(false);
-      if (inputRef.current) inputRef.current.value = "";
-    }
+    });
   }
 
   return (
-    <div className="ogw-upload">
+    <div className={`ogw-upload ${seIncarca ? "ogw-upload--loading" : ""}`}>
       <label className="ogw-field__label">{eticheta}</label>
-      <label className="ogw-upload__zona">
+      
+      <label className={`ogw-upload__zona ${seIncarca ? "is-disabled" : ""}`}>
         <input
           ref={inputRef}
           type="file"
           accept={tipuriAcceptate}
           multiple={acceptaMultiplu}
+          disabled={seIncarca}
           onChange={laSchimbare}
           className="ogw-upload__input"
         />
-        <span>{seIncarca ? "Se incarca..." : "Alege fisier sau trage aici"}</span>
+        <span>{seIncarca ? "Se încarcă fișierul..." : "Alege fișier sau trage aici"}</span>
       </label>
-      {eroare && <p className="ogw-field__eroare">{eroare}</p>}
+
+      {eroare && (
+        <p className="ogw-field__eroare" role="alert">
+          {eroare}
+        </p>
+      )}
     </div>
   );
 }

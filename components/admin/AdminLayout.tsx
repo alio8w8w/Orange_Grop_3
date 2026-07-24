@@ -1,30 +1,29 @@
-'use client'
+"use client";
 
-import { ReactNode } from 'react'
-import Image from 'next/image'
-import { motion } from 'framer-motion'
-import AnimatedWaveBackground from '@/components/general/Wavebackground'
-import Mascot from '@/components/auth/Mascot'
-import { useAuth } from '@/lib/auth-context'
+// components/admin/AdminLayout.tsx
+// Layout-ul principal pentru panoul de administrare.
+
+import { ReactNode } from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import AnimatedWaveBackground from "@/components/general/Wavebackground";
+import { useAuth } from "@/lib/auth-context";
 
 interface AdminLayoutProps {
-  children: ReactNode
-  titluPagina: string
+  children: ReactNode;
+  titluPagina: string;
 }
 
 export default function AdminLayout({ children, titluPagina }: AdminLayoutProps) {
-  const { profil, esteSuperadmin, logout } = useAuth()
+  const { profil, esteSuperadmin, logout } = useAuth();
 
   return (
     <div className="ogw-shell">
       <AnimatedWaveBackground />
-      
-      {/* Mascota acum acceptă marime={72} și se va scala proporțional fără erori TypeScript */}
-     
 
       <aside className="ogw-sidebar ogw-glass">
         <div className="ogw-sidebar__logo">
-          <Image src="/images/logo.png" alt="Orange Group 3" width={44} height={44} />
+          <Image src="/images/logo.png" alt="Orange Group 3" width={44} height={44} priority />
           <span>Orange_Group_3</span>
         </div>
 
@@ -33,7 +32,7 @@ export default function AdminLayout({ children, titluPagina }: AdminLayoutProps)
             Panou principal
           </a>
           <a href="/admin/dashboard/cv-uri" className="ogw-sidebar__link">
-            {esteSuperadmin ? 'Toate CV-urile' : 'CV-ul meu'}
+            {esteSuperadmin ? "Toate CV-urile" : "CV-ul meu"}
           </a>
           {esteSuperadmin && (
             <a href="/admin/dashboard/administratori" className="ogw-sidebar__link">
@@ -44,15 +43,20 @@ export default function AdminLayout({ children, titluPagina }: AdminLayoutProps)
 
         <div className="ogw-sidebar__profil">
           <div className="ogw-sidebar__avatar">
-            {profil?.nume_afisat?.[0]?.toUpperCase() ?? '?'}
+            {profil?.nume_afisat?.[0]?.toUpperCase() ?? "?"}
           </div>
           <div>
-            <p className="ogw-sidebar__nume">{profil?.nume_afisat ?? '...'}</p>
+            <p className="ogw-sidebar__nume">{profil?.nume_afisat ?? "..."}</p>
             <p className="ogw-sidebar__rol">
-              {esteSuperadmin ? 'Admin superior' : 'Administrator'}
+              {esteSuperadmin ? "Admin superior" : "Administrator"}
             </p>
           </div>
-          <button onClick={logout} className="ogw-sidebar__logout" aria-label="Deconectare">
+          <button 
+            type="button" 
+            onClick={logout} 
+            className="ogw-sidebar__logout" 
+            aria-label="Deconectare"
+          >
             ⏻
           </button>
         </div>
@@ -71,5 +75,5 @@ export default function AdminLayout({ children, titluPagina }: AdminLayoutProps)
         <div className="ogw-main__content">{children}</div>
       </main>
     </div>
-  )
+  );
 }

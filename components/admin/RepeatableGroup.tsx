@@ -2,7 +2,6 @@
 
 // components/admin/RepeatableGroup.tsx
 // Wrapper generic pentru liste editabile: experienta, educatie, limbi, portofoliu.
-// Primeste elementele + un "renderItem" ca sa ramana refolosibil pentru orice tip de lista.
 
 import { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -25,42 +24,57 @@ export default function RepeatableGroup<T>({
   onSterge,
   getId,
   renderItem,
-  textButonAdauga = "+ Adauga",
-  gol = "Nimic adaugat inca.",
+  textButonAdauga = "+ Adaugă",
+  gol = "Nimic adăugat încă.",
 }: RepeatableGroupProps<T>) {
   return (
     <div className="ogw-repeatable">
       <div className="ogw-repeatable__header">
         <h3>{titlu}</h3>
-        <button type="button" className="ogw-btn ogw-btn--ghost" onClick={onAdauga}>
+        <button 
+          type="button" 
+          className="ogw-btn ogw-btn--ghost" 
+          onClick={onAdauga}
+        >
           {textButonAdauga}
         </button>
       </div>
 
-      {elemente.length === 0 && <p className="ogw-repeatable__gol">{gol}</p>}
+      {elemente.length === 0 && (
+        <p className="ogw-repeatable__gol" role="status">
+          {gol}
+        </p>
+      )}
 
-      <AnimatePresence initial={false}>
-        {elemente.map((item, index) => (
-          <motion.div
-            key={getId(item)}
-            className="ogw-repeatable__item"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25 }}
-          >
-            {renderItem(item, index)}
-            <button
-              type="button"
-              className="ogw-repeatable__sterge"
-              onClick={() => onSterge(getId(item))}
-              aria-label="Sterge"
-            >
-              ✕
-            </button>
-          </motion.div>
-        ))}
-      </AnimatePresence>
+      <div className="ogw-repeatable__list">
+        <AnimatePresence initial={false}>
+          {elemente.map((item, index) => {
+            const itemId = getId(item);
+            return (
+              <motion.div
+                key={itemId}
+                className="ogw-repeatable__item"
+                initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                animate={{ opacity: 1, height: "auto", marginBottom: "1rem" }}
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+              >
+                <div className="ogw-repeatable__content">
+                  {renderItem(item, index)}
+                </div>
+                <button
+                  type="button"
+                  className="ogw-repeatable__sterge"
+                  onClick={() => onSterge(itemId)}
+                  aria-label={`Șterge elementul ${index + 1}`}
+                >
+                  ✕
+                </button>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
