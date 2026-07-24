@@ -7,6 +7,9 @@ const LOCKOUT_DURATION_HOURS = 3
 
 // Verificare Cloudflare Turnstile
 async function verifyTurnstile(token: string) {
+  console.log('[DEBUG] Token primit de la frontend:', token ? token.substring(0, 15) + '...' : 'GOL/LIPSA')
+  console.log('[DEBUG] Cheia secretă există?:', process.env.TURNSTILE_SECRET_KEY ? 'DA (lungime: ' + process.env.TURNSTILE_SECRET_KEY.length + ')' : 'NU')
+
   // Ignorăm verificarea în mediul local de Dev dacă nu este setată cheia în .env.local
   if (!process.env.TURNSTILE_SECRET_KEY && process.env.NODE_ENV === 'development') {
     console.warn('[Turnstile] Secret key lipsă în .env.local - verificare ignorată în Dev mode.')
@@ -31,6 +34,7 @@ async function verifyTurnstile(token: string) {
     })
 
     const outcome = await response.json()
+    console.log('[DEBUG] Răspuns primit de la Cloudflare:', outcome)
 
     if (!outcome.success) {
       console.error('[Turnstile] Validare eșuată de la Cloudflare:', outcome['error-codes'])
