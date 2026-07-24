@@ -20,7 +20,7 @@ export default function AdminLayout({ children, titluPagina }: AdminLayoutProps)
       <AnimatedWaveBackground />
       
       {/* Mascota acum acceptă marime={72} și se va scala proporțional fără erori TypeScript */}
-      <Mascot marime={72} vitezaUrmarire={0.07} />
+     
 
       <aside className="ogw-sidebar ogw-glass">
         <div className="ogw-sidebar__logo">
