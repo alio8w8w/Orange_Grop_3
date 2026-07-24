@@ -77,21 +77,7 @@ export async function signIn(prevState: any, formData: FormData) {
     return { error: 'Validare bot eșuată. Reîncărcați pagina sau bifați verificarea Turnstile.' }
   }
 
-  const supabaseAdmin = await createAdminClient()
-
-  // 2. Verificare dacă emailul este înregistrat în tabelul de admini
-  const { data: adminRecord, error: adminError } = await supabaseAdmin
-    .from('admin_profiles')
-    .select('email')
-    .eq('email', email)
-    .single()
-
-  if (adminError || !adminRecord) {
-    await recordAttempt(email, false)
-    return { error: 'Acces neautorizat. Această adresă de email nu are permisiuni de administrator.' }
-  }
-
-  // 3. Autentificare efectivă cu Supabase Auth (folosind clientul normal, nu admin)
+  // 2. Autentificare efectivă cu Supabase Auth PRIMA DATĂ
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -104,7 +90,22 @@ export async function signIn(prevState: any, formData: FormData) {
     return { error: 'Email sau parolă incorectă.' }
   }
 
-  // Dacă ajungem aici, autentificarea a reușit
+  // 3. Verificare suplimentară: Este userul în admin_profiles?
+  const supabaseAdmin = await createAdminClient()
+  const { data: adminRecord, error: adminError } = await supabaseAdmin
+    .from('admin_profiles')
+    .select('email')
+    .eq('email', email)
+    .maybeSingle()
+
+  if (adminError || !adminRecord) {
+    await recordAttempt(email, false)
+    // Închidem sesiunea dacă nu e admin
+    await supabase.auth.signOut()
+    return { error: 'Acces neautorizat. Această adresă de email nu are permisiuni de administrator.' }
+  }
+
+  // Dacă totul este 100% corect
   await recordAttempt(email, true)
 
   return {
