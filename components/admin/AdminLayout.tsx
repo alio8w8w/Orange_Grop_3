@@ -21,7 +21,8 @@ export default function AdminLayout({ children, titluPagina }: AdminLayoutProps)
     <div className="ogw-shell">
       <AnimatedWaveBackground />
 
-      <aside className="ogw-sidebar ogw-glass">
+      {/* Sidebar cu fundal alb semitransparent */}
+      <aside className="ogw-sidebar">
         <div className="ogw-sidebar__logo">
           <Image src="/images/logo.png" alt="Orange Group 3" width={44} height={44} priority />
           <span>Orange_Group_3</span>
@@ -62,6 +63,7 @@ export default function AdminLayout({ children, titluPagina }: AdminLayoutProps)
         </div>
       </aside>
 
+      {/* Zona principală pe fundal negru semitransparent */}
       <main className="ogw-main">
         <motion.header
           className="ogw-main__header"

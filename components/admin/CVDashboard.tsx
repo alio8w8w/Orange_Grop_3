@@ -1,7 +1,7 @@
 "use client";
 
 // components/admin/CVDashboard.tsx
-// Panoul principal: superadmin vede cardurile tuturor adminilor, adminul obisnuit editeaza direct CV-ul lui.
+// Panoul principal: superadmin vede cardurile tuturor adminilor, adminul obișnuit editează direct CV-ul lui în aceeași interfață.
 
 import { useEffect, useState } from "react";
 import GlassPanel from "@/components/ui/GlassPanel";
@@ -49,6 +49,7 @@ export default function CVDashboard() {
 
           setRanduri(combinate);
         } else {
+          // Admin obișnuit: incarca doar propriul CV și îl selectează automat pentru randare în interfață
           const { data: cvProprie, error } = await supabase
             .from("cvs")
             .select("*")
@@ -71,7 +72,7 @@ export default function CVDashboard() {
   }, [profil, esteSuperadmin]);
 
   if (seIncarca) {
-    return <p className="ogw-loading">Se încarcă panoul...</p>;
+    return <p className="ogw-loading" style={{ color: "white", padding: "2rem" }}>Se încarcă panoul...</p>;
   }
 
   if (eroare) {
@@ -82,15 +83,17 @@ export default function CVDashboard() {
     );
   }
 
+  // Dacă un admin este selectat, deschidem editorul direct în aceeași interfață (fără pagini/url-uri separate)
   if (adminSelectat) {
     const rand = randuri.find((r) => r.admin.id === adminSelectat);
     if (rand) {
       return (
-        <div>
+        <div className="ogw-editor-wrapper">
           {esteSuperadmin && (
             <button 
               type="button" 
               className="ogw-btn ogw-btn--ghost ogw-back-btn" 
+              style={{ marginBottom: "1.5rem" }}
               onClick={() => setAdminSelectat(null)}
             >
               ← Înapoi la toate CV-urile
@@ -110,6 +113,7 @@ export default function CVDashboard() {
     }
   }
 
+  // Panoul de carduri pentru superadmin așezat pe fundalul negru semitransparent
   return (
     <div className="ogw-grid ogw-grid--carduri">
       {randuri.map(({ admin, cv }, i) => (
@@ -117,8 +121,8 @@ export default function CVDashboard() {
           <div className="ogw-card-cv__avatar">
             {admin.nume_afisat[0]?.toUpperCase() ?? "A"}
           </div>
-          <h3>{admin.nume_afisat}</h3>
-          <p className="ogw-card-cv__status">
+          <h3 style={{ margin: "0.5rem 0", fontWeight: 600 }}>{admin.nume_afisat}</h3>
+          <p className="ogw-card-cv__status" style={{ opacity: 0.8, fontSize: "0.875rem", marginBottom: "1rem" }}>
             {cv ? `Status: ${cv.status.replace("_", " ")}` : "Fără CV creat încă"}
           </p>
           <button 

@@ -145,24 +145,19 @@
   min-height: 100vh;
   position: relative;
   background-color: var(--background);
-  color: var(--foreground);
 }
 
-/* Efectul de Glassmorphism reutilizat */
+/* Panouri de sticlă în interiorul editorului */
 .ogw-glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 1rem;
+  color: inherit;
 }
 
-.dark .ogw-glass {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* Sidebar */
+/* Sidebar alb semitransparent */
 .ogw-sidebar {
   width: 280px;
   position: fixed;
@@ -173,6 +168,11 @@
   flex-direction: column;
   padding: 1.5rem;
   z-index: 40;
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  color: #1a1a1a;
 }
 
 .ogw-sidebar__logo {
@@ -201,7 +201,7 @@
 
 .ogw-sidebar__link:hover,
 .ogw-sidebar__link--activ {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .ogw-sidebar__profil {
@@ -209,7 +209,7 @@
   align-items: center;
   gap: 0.75rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .ogw-sidebar__avatar {
@@ -236,7 +236,7 @@
   opacity: 1;
 }
 
-/* Zona principală (Main Content) */
+/* Zona principală pe fundal negru semitransparent */
 .ogw-main {
   flex: 1;
   margin-left: 280px;
@@ -245,6 +245,15 @@
   flex-direction: column;
   gap: 2rem;
   z-index: 10;
+  background: rgba(0, 0, 0, 0.65); /* Negru semitransparent */
+  min-height: 100vh;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 1.5rem 0 0 1.5rem;
+  margin-top: 1rem;
+  margin-right: 1rem;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  color: white;
 }
 
 .ogw-main__header h1 {
@@ -319,7 +328,7 @@
   color: inherit;
   font-size: 0.875rem;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
 
 .ogw-editor input:focus,
@@ -327,6 +336,14 @@
 .ogw-editor textarea:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(255, 165, 0, 0.2);
+}
+
+/* Câmpuri completate / selectate devin automat portocalii */
+.ogw-editor input:not(:placeholder-shown):not([type="file"]),
+.ogw-editor select:valid,
+.ogw-editor textarea:not(:placeholder-shown) {
+  border-color: var(--primary) !important;
+  background: rgba(255, 165, 0, 0.08) !important;
 }
 
 /* Zona de Upload Fișiere */
@@ -354,7 +371,7 @@
 }
 
 .ogw-upload__input {
-  display: none; /* Ascunde inputul nativ urât de fișiere */
+  display: none;
 }
 
 .ogw-editor__poza-preview {
@@ -439,8 +456,7 @@
 
 /* Animații fundal */
 @keyframes orb-drift-a {
-  0%,
-  100% {
+  0%, 100% {
     transform: translate3d(0, 0, 0) scale(1);
   }
   50% {
@@ -449,8 +465,7 @@
 }
 
 @keyframes orb-drift-b {
-  0%,
-  100% {
+  0%, 100% {
     transform: translate3d(0, 0, 0) scale(1.1);
   }
   50% {
@@ -459,8 +474,7 @@
 }
 
 @keyframes orb-drift-c {
-  0%,
-  100% {
+  0%, 100% {
     transform: translate3d(0, 0, 0) scale(0.95);
   }
   50% {

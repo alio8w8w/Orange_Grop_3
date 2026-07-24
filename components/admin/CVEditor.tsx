@@ -1,7 +1,7 @@
 "use client";
 
 // components/admin/CVEditor.tsx
-// Formularul complet de redactare CV.
+// Formularul complet de redactare CV împărțit pe categorii, cu slider pentru competențe și previzualizare tip CV.
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -62,15 +62,16 @@ function Eticheta({ text, obligatoriu }: { text: string; obligatoriu?: boolean }
 export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps) {
   const [cv, setCv] = useState<CV>(cvInitial ?? cvGol(adminId));
   const [skillNou, setSkillNou] = useState("");
+  const [nivelSkill, setNivelSkill] = useState<number>(3); // 1 = Slab, 5 = Foarte bine
   const [permisNou, setPermisNou] = useState("");
   const [seSalveaza, setSeSalveaza] = useState(false);
   const [mesaj, setMesaj] = useState<{ tip: "ok" | "eroare"; text: string } | null>(null);
+  const [modPrevizualizare, setModPrevizualizare] = useState(false);
 
   function actualizeaza<K extends keyof CV>(camp: K, valoare: CV[K]) {
     setCv((prev) => ({ ...prev, [camp]: valoare }));
   }
 
-  // --- Helper generic pentru actualizarea elementelor din liste repetabile ---
   function actualizeazaElementLista<T extends { id: string }>(
     campLista: keyof CV,
     id: string,
@@ -113,12 +114,17 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
     actualizeaza("portofoliu", [...cv.portofoliu, item]);
   }
 
-  // --- Skills ---
+  // --- Skills cu Slider ---
   function adaugaSkill() {
     const valoare = skillNou.trim();
-    if (!valoare || cv.skills.includes(valoare)) return;
-    actualizeaza("skills", [...cv.skills, valoare]);
+    if (!valoare) return;
+    const etichetaNivel = ["Slab", "Mediu", "Bine", "Foarte bine", "Excelent"][nivelSkill - 1] || "Bine";
+    const skillFormat = `${valoare} (${etichetaNivel})`;
+    if (cv.skills.includes(skillFormat)) return;
+
+    actualizeaza("skills", [...cv.skills, skillFormat]);
     setSkillNou("");
+    setNivelSkill(3);
   }
   function stergeSkill(skill: string) {
     actualizeaza("skills", cv.skills.filter((s) => s !== skill));
@@ -144,6 +150,11 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
       return;
     }
 
+    if (!adminId) {
+      setMesaj({ tip: "eroare", text: "Eroare: Lipsește ID-ul administratorului pentru asocierea corectă în baza de date." });
+      return;
+    }
+
     setSeSalveaza(true);
     setMesaj(null);
 
@@ -165,7 +176,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
     }
 
     setCv(data as CV);
-    setMesaj({ tip: "ok", text: "CV salvat cu succes." });
+    setMesaj({ tip: "ok", text: "CV salvat cu succes în baza de date!" });
     onSalvat?.(data as CV);
   }
 
@@ -183,31 +194,90 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
     setMesaj({ tip: "ok", text: "CV șters." });
   }
 
+  // Dacă adminul a selectat modul de prezență/previzualizare finală tip CV
+  if (modPrevizualizare) {
+    return (
+      <div className="ogw-editor ogw-preview-mode">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+          <h2>Previzualizare CV</h2>
+          <button type="button" className="ogw-btn ogw-btn--ghost" onClick={() => setModPrevizualizare(false)}>
+            ← Înapoi la editare
+          </button>
+        </div>
+        
+        <GlassPanel className="ogw-editor__sectiune" style={{ padding: "2.5rem" }}>
+          <div style={{ display: "flex", gap: "1.5rem", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "1.5rem" }}>
+            {cv.poza_url && <img src={cv.poza_url} alt="Avatar" style={{ width: 100, height: 100, borderRadius: "50%", objectFit: "cover" }} />}
+            <div>
+              <h1 style={{ fontSize: "2rem", fontWeight: 700 }}>{cv.nume} {cv.prenume}</h1>
+              <p style={{ opacity: 0.8 }}>{cv.localitate} | {cv.telefon} | {cv.email}</p>
+            </div>
+          </div>
+
+          {cv.biografie && (
+            <div style={{ marginTop: "1.5rem" }}>
+              <h3 style={{ color: "var(--primary)", marginBottom: "0.5rem" }}>Biografie</h3>
+              <p style={{ opacity: 0.9, lineHeight: 1.6 }}>{cv.biografie}</p>
+            </div>
+          )}
+
+          {cv.skills.length > 0 && (
+            <div style={{ marginTop: "1.5rem" }}>
+              <h3 style={{ color: "var(--primary)", marginBottom: "0.5rem" }}>Competențe</h3>
+              <div className="ogw-tags">
+                {cv.skills.map((s, idx) => <span key={idx} className="ogw-tag">{s}</span>)}
+              </div>
+            </div>
+          )}
+
+          {cv.experienta.length > 0 && (
+            <div style={{ marginTop: "1.5rem" }}>
+              <h3 style={{ color: "var(--primary)", marginBottom: "0.5rem" }}>Experiență Profesională</h3>
+              {cv.experienta.map((exp) => (
+                <div key={exp.id} style={{ marginBottom: "1rem" }}>
+                  <strong style={{ fontSize: "1.1rem" }}>{exp.functie}</strong> - {exp.companie}
+                  <p style={{ fontSize: "0.85rem", opacity: 0.7 }}>{exp.data_inceput} - {exp.data_sfarsit || "Prezent"}</p>
+                  <p>{exp.descriere}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </GlassPanel>
+
+        <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+          <button type="button" className="ogw-btn ogw-btn--primar" onClick={salveaza} disabled={seSalveaza}>
+            {seSalveaza ? "Se salvează..." : "Confirmă și Salvează CV"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="ogw-editor">
-      {/* --- Date personale --- */}
+      {/* --- Categoria 1: Informații Generale --- */}
       <GlassPanel className="ogw-editor__sectiune">
-        <h2>Date personale</h2>
+        <h2>1. Informații Generale</h2>
         <div className="ogw-grid ogw-grid--2">
           <div>
             <Eticheta text="Nume" obligatoriu />
-            <input value={cv.nume} onChange={(e) => actualizeaza("nume", e.target.value)} />
+            <input value={cv.nume} onChange={(e) => actualizeaza("nume", e.target.value)} placeholder="Nume de familie" />
           </div>
           <div>
             <Eticheta text="Prenume" obligatoriu />
-            <input value={cv.prenume} onChange={(e) => actualizeaza("prenume", e.target.value)} />
+            <input value={cv.prenume} onChange={(e) => actualizeaza("prenume", e.target.value)} placeholder="Prenume" />
           </div>
           <div>
             <Eticheta text="Număr de telefon" obligatoriu />
-            <input value={cv.telefon} onChange={(e) => actualizeaza("telefon", e.target.value)} />
+            <input value={cv.telefon} onChange={(e) => actualizeaza("telefon", e.target.value)} placeholder="07xxxxxxxx" />
           </div>
           <div>
             <Eticheta text="Email" obligatoriu />
-            <input type="email" value={cv.email} onChange={(e) => actualizeaza("email", e.target.value)} />
+            <input type="email" value={cv.email} onChange={(e) => actualizeaza("email", e.target.value)} placeholder="exemplu@email.com" />
           </div>
           <div>
             <Eticheta text="Localitate" obligatoriu />
-            <input value={cv.localitate} onChange={(e) => actualizeaza("localitate", e.target.value)} />
+            <input value={cv.localitate} onChange={(e) => actualizeaza("localitate", e.target.value)} placeholder="Oraș / Localitate" />
           </div>
           <div>
             <Eticheta text="Data nașterii" />
@@ -263,16 +333,16 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
         </div>
       </GlassPanel>
 
-      {/* --- Conținut narativ --- */}
+      {/* --- Categoria 2: Prezentare & Biografie --- */}
       <GlassPanel className="ogw-editor__sectiune" intarziereReveal={0.05}>
-        <h2>Biografie & prezentare</h2>
+        <h2>2. Prezentare & Biografie</h2>
         <div>
           <Eticheta text="Biografie" />
-          <textarea rows={4} value={cv.biografie} onChange={(e) => actualizeaza("biografie", e.target.value)} />
+          <textarea rows={4} value={cv.biografie} onChange={(e) => actualizeaza("biografie", e.target.value)} placeholder="Descrie-ți parcursul profesional..." />
         </div>
         <div>
           <Eticheta text="Descriere scurtă" />
-          <textarea rows={3} value={cv.descriere} onChange={(e) => actualizeaza("descriere", e.target.value)} />
+          <textarea rows={3} value={cv.descriere} onChange={(e) => actualizeaza("descriere", e.target.value)} placeholder="Un rezumat de o propoziție..." />
         </div>
         <div>
           <Eticheta text="Scrisoare de intenție" />
@@ -280,12 +350,15 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             rows={6}
             value={cv.scrisoare_intentie}
             onChange={(e) => actualizeaza("scrisoare_intentie", e.target.value)}
+            placeholder="De ce dorești să te alături echipei..."
           />
         </div>
       </GlassPanel>
 
-      {/* --- Experiență --- */}
+      {/* --- Categoria 3: Educație & Experiență --- */}
       <GlassPanel className="ogw-editor__sectiune" intarziereReveal={0.1}>
+        <h2>3. Educație & Experiență Profesională</h2>
+        
         <RepeatableGroup
           titlu="Experiență profesională"
           elemente={cv.experienta}
@@ -295,7 +368,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
           textButonAdauga="+ Adaugă experiență"
           gol="Nicio experiență adăugată."
           renderItem={(item) => (
-            <div className="ogw-grid ogw-grid--2">
+            <div className="ogw-grid ogw-grid--2" style={{ marginTop: "1rem" }}>
               <input
                 placeholder="Companie"
                 value={item.companie}
@@ -327,111 +400,128 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             </div>
           )}
         />
-      </GlassPanel>
 
-      {/* --- Educație --- */}
-      <GlassPanel className="ogw-editor__sectiune" intarziereReveal={0.15}>
-        <RepeatableGroup
-          titlu="Educație"
-          elemente={cv.educatie}
-          getId={(e) => e.id}
-          onAdauga={adaugaEducatie}
-          onSterge={(id) => actualizeaza("educatie", cv.educatie.filter((e) => e.id !== id))}
-          textButonAdauga="+ Adaugă educație"
-          gol="Nicio instituție adăugată."
-          renderItem={(item) => (
-            <div className="ogw-grid ogw-grid--2">
-              <input
-                placeholder="Instituție"
-                value={item.institutie}
-                onChange={(e) => actualizeazaElementLista<EducatieItem>("educatie", item.id, { institutie: e.target.value })}
-              />
-              <input
-                placeholder="Specializare"
-                value={item.specializare}
-                onChange={(e) => actualizeazaElementLista<EducatieItem>("educatie", item.id, { specializare: e.target.value })}
-              />
-              <select
-                value={item.nivel}
-                onChange={(e) => actualizeazaElementLista<EducatieItem>("educatie", item.id, { nivel: e.target.value as EducatieItem["nivel"] })}
-              >
-                <option value="liceu">Liceu</option>
-                <option value="facultate">Facultate</option>
-                <option value="master">Master</option>
-                <option value="doctorat">Doctorat</option>
-                <option value="curs">Curs</option>
-                <option value="certificare">Certificare</option>
-              </select>
-              <input
-                type="month"
-                value={item.data_inceput}
-                onChange={(e) => actualizeazaElementLista<EducatieItem>("educatie", item.id, { data_inceput: e.target.value })}
-              />
-            </div>
-          )}
-        />
-      </GlassPanel>
-
-      {/* --- Limbi --- */}
-      <GlassPanel className="ogw-editor__sectiune" intarziereReveal={0.2}>
-        <RepeatableGroup
-          titlu="Limbi străine"
-          elemente={cv.limbi}
-          getId={(l) => l.id}
-          onAdauga={adaugaLimba}
-          onSterge={(id) => actualizeaza("limbi", cv.limbi.filter((l) => l.id !== id))}
-          textButonAdauga="+ Adaugă limbă"
-          gol="Nicio limbă adăugată."
-          renderItem={(item) => (
-            <div className="ogw-grid ogw-grid--2">
-              <input
-                placeholder="Limbă"
-                value={item.limba}
-                onChange={(e) => actualizeazaElementLista<LimbaItem>("limbi", item.id, { limba: e.target.value })}
-              />
-              <select
-                value={item.nivel}
-                onChange={(e) => actualizeazaElementLista<LimbaItem>("limbi", item.id, { nivel: e.target.value as LimbaItem["nivel"] })}
-              >
-                {["A1", "A2", "B1", "B2", "C1", "C2", "nativ"].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        />
-      </GlassPanel>
-
-      {/* --- Skills --- */}
-      <GlassPanel className="ogw-editor__sectiune" intarziereReveal={0.25}>
-        <h2>Competențe</h2>
-        <div className="ogw-tag-input">
-          <input
-            value={skillNou}
-            onChange={(e) => setSkillNou(e.target.value)}
-            placeholder="ex: React, Photoshop, Vânzări..."
-            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), adaugaSkill())}
+        <div style={{ marginTop: "1.5rem" }}>
+          <RepeatableGroup
+            titlu="Educație"
+            elemente={cv.educatie}
+            getId={(e) => e.id}
+            onAdauga={adaugaEducatie}
+            onSterge={(id) => actualizeaza("educatie", cv.educatie.filter((e) => e.id !== id))}
+            textButonAdauga="+ Adaugă educație"
+            gol="Nicio instituție adăugată."
+            renderItem={(item) => (
+              <div className="ogw-grid ogw-grid--2" style={{ marginTop: "1rem" }}>
+                <input
+                  placeholder="Instituție"
+                  value={item.institutie}
+                  onChange={(e) => actualizeazaElementLista<EducatieItem>("educatie", item.id, { institutie: e.target.value })}
+                />
+                <input
+                  placeholder="Specializare"
+                  value={item.specializare}
+                  onChange={(e) => actualizeazaElementLista<EducatieItem>("educatie", item.id, { specializare: e.target.value })}
+                />
+                <select
+                  value={item.nivel}
+                  onChange={(e) => actualizeazaElementLista<EducatieItem>("educatie", item.id, { nivel: e.target.value as EducatieItem["nivel"] })}
+                >
+                  <option value="liceu">Liceu</option>
+                  <option value="facultate">Facultate</option>
+                  <option value="master">Master</option>
+                  <option value="doctorat">Doctorat</option>
+                  <option value="curs">Curs</option>
+                  <option value="certificare">Certificare</option>
+                </select>
+                <input
+                  type="month"
+                  value={item.data_inceput}
+                  onChange={(e) => actualizeazaElementLista<EducatieItem>("educatie", item.id, { data_inceput: e.target.value })}
+                />
+              </div>
+            )}
           />
-          <button type="button" className="ogw-btn ogw-btn--ghost" onClick={adaugaSkill}>
-            Adaugă
-          </button>
-        </div>
-        <div className="ogw-tags">
-          {cv.skills.map((s) => (
-            <span key={s} className="ogw-tag">
-              {s}
-              <button type="button" onClick={() => stergeSkill(s)}>✕</button>
-            </span>
-          ))}
         </div>
       </GlassPanel>
 
-      {/* --- Portofoliu --- */}
-      <GlassPanel className="ogw-editor__sectiune" intarziereReveal={0.3}>
+      {/* --- Categoria 4: Competențe & Limbi Străine (cu Slider) --- */}
+      <GlassPanel className="ogw-editor__sectiune" intarziereReveal={0.15}>
+        <h2>4. Competențe & Limbi Străine</h2>
+        
+        <div>
+          <Eticheta text="Adaugă Skill / Competență cu Nivel de Evaluare (Slider)" />
+          <div className="ogw-tag-input" style={{ display: "flex.col", gap: "0.75rem" }}>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <input
+                value={skillNou}
+                onChange={(e) => setSkillNou(e.target.value)}
+                placeholder="ex: React, Management, Vanzari..."
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), adaugaSkill())}
+              />
+              <button type="button" className="ogw-btn ogw-btn--ghost" onClick={adaugaSkill}>
+                Adaugă
+              </button>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", background: "rgba(255,255,255,0.03)", padding: "0.75rem", borderRadius: "0.5rem" }}>
+              <span style={{ fontSize: "0.85rem", opacity: 0.8 }}>Nivel: <strong>{["Slab", "Mediu", "Bine", "Foarte bine", "Excelent"][nivelSkill - 1]}</strong></span>
+              <input 
+                type="range" 
+                min="1" 
+                max="5" 
+                value={nivelSkill} 
+                onChange={(e) => setNivelSkill(Number(e.target.value))}
+                style={{ flex: 1, accentColor: "var(--primary)", cursor: "pointer" }}
+              />
+            </div>
+          </div>
+          <div className="ogw-tags">
+            {cv.skills.map((s) => (
+              <span key={s} className="ogw-tag">
+                {s}
+                <button type="button" onClick={() => stergeSkill(s)}>✕</button>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginTop: "1.5rem" }}>
+          <RepeatableGroup
+            titlu="Limbi străine"
+            elemente={cv.limbi}
+            getId={(l) => l.id}
+            onAdauga={adaugaLimba}
+            onSterge={(id) => actualizeaza("limbi", cv.limbi.filter((l) => l.id !== id))}
+            textButonAdauga="+ Adaugă limbă"
+            gol="Nicio limbă adăugată."
+            renderItem={(item) => (
+              <div className="ogw-grid ogw-grid--2" style={{ marginTop: "1rem" }}>
+                <input
+                  placeholder="Limbă"
+                  value={item.limba}
+                  onChange={(e) => actualizeazaElementLista<LimbaItem>("limbi", item.id, { limba: e.target.value })}
+                />
+                <select
+                  value={item.nivel}
+                  onChange={(e) => actualizeazaElementLista<LimbaItem>("limbi", item.id, { nivel: e.target.value as LimbaItem["nivel"] })}
+                >
+                  {["A1", "A2", "B1", "B2", "C1", "C2", "nativ"].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          />
+        </div>
+      </GlassPanel>
+
+      {/* --- Categoria 5: Portofoliu & Documente --- */}
+      <GlassPanel className="ogw-editor__sectiune" intarziereReveal={0.2}>
+        <h2>5. Portofoliu & Documente</h2>
+        
         <RepeatableGroup
-          titlu="Portofoliu"
+          titlu="Portofoliu Proiecte"
           elemente={cv.portofoliu}
           getId={(p) => p.id}
           onAdauga={adaugaPortofoliu}
@@ -439,7 +529,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
           textButonAdauga="+ Adaugă proiect"
           gol="Niciun proiect adăugat."
           renderItem={(item) => (
-            <div className="ogw-grid ogw-grid--2">
+            <div className="ogw-grid ogw-grid--2" style={{ marginTop: "1rem" }}>
               <input
                 placeholder="Titlu proiect"
                 value={item.titlu}
@@ -453,43 +543,42 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             </div>
           )}
         />
+
+        <div style={{ marginTop: "1.5rem" }}>
+          <FileUploadField
+            eticheta="Încarcă diplomă / certificat"
+            adminId={adminId}
+            bucket="documente"
+            acceptaMultiplu
+            tipuriAcceptate="image/*,.pdf"
+            onIncarcat={(url, numeFisier) =>
+              actualizeaza("documente", [
+                ...cv.documente,
+                { id: idNou(), nume_fisier: numeFisier, url, tip: "diploma", data_incarcare: new Date().toISOString() },
+              ])
+            }
+          />
+          <ul className="ogw-doc-list" style={{ marginTop: "0.5rem" }}>
+            {cv.documente.map((doc) => (
+              <li key={doc.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.3rem 0" }}>
+                <a href={doc.url} target="_blank" rel="noreferrer" style={{ color: "var(--primary)" }}>{doc.nume_fisier}</a>
+                <button
+                  type="button"
+                  onClick={() => actualizeaza("documente", cv.documente.filter((d) => d.id !== doc.id))}
+                  style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer" }}
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       </GlassPanel>
 
-      {/* --- Documente --- */}
-      <GlassPanel className="ogw-editor__sectiune" intarziereReveal={0.35}>
-        <h2>Diplome & certificate</h2>
-        <FileUploadField
-          eticheta="Încarcă diplomă / certificat"
-          adminId={adminId}
-          bucket="documente"
-          acceptaMultiplu
-          tipuriAcceptate="image/*,.pdf"
-          onIncarcat={(url, numeFisier) =>
-            actualizeaza("documente", [
-              ...cv.documente,
-              { id: idNou(), nume_fisier: numeFisier, url, tip: "diploma", data_incarcare: new Date().toISOString() },
-            ])
-          }
-        />
-        <ul className="ogw-doc-list">
-          {cv.documente.map((doc) => (
-            <li key={doc.id}>
-              <a href={doc.url} target="_blank" rel="noreferrer">{doc.nume_fisier}</a>
-              <button
-                type="button"
-                onClick={() => actualizeaza("documente", cv.documente.filter((d) => d.id !== doc.id))}
-              >
-                ✕
-              </button>
-            </li>
-          ))}
-        </ul>
-      </GlassPanel>
-
-      {/* --- Social links --- */}
-      <GlassPanel className="ogw-editor__sectiune" intarziereReveal={0.4}>
-        <h2>Rețele sociale</h2>
-        <div className="ogw-grid ogw-grid--2">
+      {/* --- Categoria 6: Rețele Sociale & Setări Finale --- */}
+      <GlassPanel className="ogw-editor__sectiune ogw-editor__actiuni" intarziereReveal={0.25}>
+        <h2>6. Rețele Sociale & Status</h2>
+        <div className="ogw-grid ogw-grid--2" style={{ marginBottom: "1rem" }}>
           {(["facebook", "instagram", "linkedin", "tiktok"] as const).map((retea) => (
             <div key={retea}>
               <Eticheta text={retea[0].toUpperCase() + retea.slice(1)} />
@@ -503,10 +592,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             </div>
           ))}
         </div>
-      </GlassPanel>
 
-      {/* --- Status + acțiuni --- */}
-      <GlassPanel className="ogw-editor__sectiune ogw-editor__actiuni" intarziereReveal={0.45}>
         <div>
           <Eticheta text="Status CV" />
           <select value={cv.status} onChange={(e) => actualizeaza("status", e.target.value as CV["status"])}>
@@ -517,12 +603,15 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
           </select>
         </div>
 
-        <div className="ogw-editor__butoane">
+        <div className="ogw-editor__butoane" style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
           {cv.id && (
             <button type="button" className="ogw-btn ogw-btn--danger" onClick={sterge}>
               Șterge CV
             </button>
           )}
+          <button type="button" className="ogw-btn ogw-btn--ghost" onClick={() => setModPrevizualizare(true)}>
+            Previzualizează CV-ul
+          </button>
           <motion.button
             type="button"
             className="ogw-btn ogw-btn--primar"
@@ -535,7 +624,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
         </div>
 
         {mesaj && (
-          <p className={mesaj.tip === "ok" ? "ogw-mesaj ogw-mesaj--ok" : "ogw-mesaj ogw-mesaj--eroare"}>
+          <p className={mesaj.tip === "ok" ? "ogw-mesaj ogw-mesaj--ok" : "ogw-mesaj ogw-mesaj--eroare"} style={{ marginTop: "1rem" }}>
             {mesaj.text}
           </p>
         )}
