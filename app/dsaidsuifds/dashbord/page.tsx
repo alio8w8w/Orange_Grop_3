@@ -1,22 +1,27 @@
 "use client";
 
-// Pagina principală a panelului de administrare.
 import AdminLayout from "@/components/admin/AdminLayout";
 import CVDashboard from "@/components/admin/CVDashboard";
 import { useAuth } from "@/lib/auth-context";
 
-// OBLIGATORIU pentru paginile protejate/cu date de sesiune: 
-// Oprește generarea statică la build și forțează randarea dinamică la runtime.
 export const dynamic = 'force-dynamic';
 
 export default function DashboardPage() {
   const { profil, seIncarca } = useAuth();
 
-  if (seIncarca) return <p className="ogw-loading">Se incarca...</p>;
-  if (!profil) return <p className="ogw-loading">Trebuie sa fii autentificat.</p>;
+  // 1. Dacă încă se încarcă datele, afișăm un loading simplu
+  if (seIncarca) {
+    return <p className="ogw-loading" style={{ color: '#ffe9d6', textAlign: 'center', marginTop: '20vh' }}>Se incarca...</p>;
+  }
 
+  // 2. Doar dacă s-a terminat de încărcat ȘI profilul lipsește definitiv, afișăm mesajul
+  if (!profil) {
+    return <p className="ogw-loading" style={{ color: '#ffe9d6', textAlign: 'center', marginTop: '20vh' }}>Trebuie sa fii autentificat.</p>;
+  }
+
+  // 3. Dacă totul este valid, randăm în sfârșit panoul de admin!
   return (
-    <AdminLayout titluPagina={`Bine ai revenit, ${profil.nume_afisat.split(" ")[0]}`}>
+    <AdminLayout titluPagina={`Bine ai revenit, ${profil?.nume_afisat?.split(" ")[0] || 'Admin'}`}>
       <CVDashboard />
     </AdminLayout>
   );
