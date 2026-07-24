@@ -59,7 +59,22 @@ function Eticheta({ text, obligatoriu }: { text: string; obligatoriu?: boolean }
 }
 
 export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps) {
-  const [cv, setCv] = useState<CV>(cvInitial ?? cvGol(adminId));
+  // Inițializare cu recuperare din localStorage pentru a preveni pierderea datelor la refresh
+  const [cv, setCv] = useState<CV>(() => {
+    if (cvInitial) return cvInitial;
+    if (typeof window !== "undefined") {
+      const draftSalvat = localStorage.getItem(`cv_draft_${adminId}`);
+      if (draftSalvat) {
+        try {
+          return JSON.parse(draftSalvat);
+        } catch (e) {
+          console.error("Eroare la parsarea draftului", e);
+        }
+      }
+    }
+    return cvGol(adminId);
+  });
+
   const [etapaActiva, setEtapaActiva] = useState<number>(1);
 
   // Stări pentru Skills cu slider
@@ -69,10 +84,17 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
   const [nivelSoft, setNivelSoft] = useState<number>(3);
 
   const [permisNou, setPermisNou] = useState("");
-  const [seIncarcaFisier, setSeIncarcaFisier] = useState(false); // Bară de progres / blocare la upload
+  const [seIncarcaFisier, setSeIncarcaFisier] = useState(false);
   const [seSalveaza, setSeSalveaza] = useState(false);
   const [mesaj, setMesaj] = useState<{ tip: "ok" | "eroare"; text: string } | null>(null);
   const [modPrevizualizare, setModPrevizualizare] = useState(false);
+
+  // Autosave în localStorage la fiecare modificare a stării CV-ului
+  useEffect(() => {
+    if (cv && (cv.nume || cv.email)) {
+      localStorage.setItem(`cv_draft_${adminId}`, JSON.stringify(cv));
+    }
+  }, [cv, adminId]);
 
   // Protecție la închiderea ferestrei/reload din greșeală
   useEffect(() => {
@@ -240,6 +262,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
     }
 
     setCv(data as CV);
+    localStorage.removeItem(`cv_draft_${adminId}`); // Curățăm draftul local după salvarea reușită
     setMesaj({ tip: "ok", text: "CV salvat cu succes în Supabase!" });
     onSalvat?.(data as CV);
   }
@@ -366,7 +389,6 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
                 setSeIncarcaFisier(false);
               }}
             />
-            {/* Supraveghem momentul când se declanșează uploadul */}
           </div>
 
           {cv.poza_url && (
@@ -537,12 +559,11 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
         </GlassPanel>
       )}
 
-      {/* --- ETAPA 5: Competențe (cu Slider) & Limbi Străine --- */}
+      {/* --- ETAPA 5: Competențe & Limbi Străine --- */}
       {etapaActiva === 5 && (
         <GlassPanel className="ogw-editor__sectiune">
           <h2>Etapa 5: Competențe & Limbi Străine</h2>
           
-          {/* Hard Skills cu Slider */}
           <div style={{ marginBottom: "1.25rem" }}>
             <Eticheta text="Hard Skills (Abilități Tehnice) + Slider Nivel" />
             <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
@@ -567,7 +588,6 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             </div>
           </div>
 
-          {/* Soft Skills cu Slider */}
           <div style={{ marginBottom: "1.25rem" }}>
             <Eticheta text="Soft Skills (Abilități Personale) + Slider Nivel" />
             <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
@@ -601,7 +621,6 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             ))}
           </div>
 
-          {/* Limbi Străine cu Nivel separat */}
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "1rem" }}>
             <RepeatableGroup
               titlu="Limbi Străine (cu Nivel Cadru European)"
@@ -638,7 +657,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
         </GlassPanel>
       )}
 
-      {/* --- ETAPA 6: Portofoliu & Documente (Diplome/Certificate separate) --- */}
+      {/* --- ETAPA 6: Portofoliu & Documente --- */}
       {etapaActiva === 6 && (
         <GlassPanel className="ogw-editor__sectiune">
           <h2>Etapa 6: Portofoliu Proiecte & Diplome/Certificate</h2>
