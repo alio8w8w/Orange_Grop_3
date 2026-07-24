@@ -1,103 +1,96 @@
-"use client";
+'use server'
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
-import { supabase } from "./supabase/client";
-import type { AdminProfile } from "@/types/cv";
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 
-interface AuthContextValue {
-  profil: AdminProfile | null;
-  seIncarca: boolean;
-  esteSuperadmin: boolean;
-  logout: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [profil, setProfil] = useState<AdminProfile | null>(null);
-  const [seIncarca, setSeIncarca] = useState(true);
-
-  useEffect(() => {
-    async function incarcaProfil() {
-      console.log("[DEBUG 1] Încep verificarea sesiunii în AuthProvider...");
-
-      const {
-        data: { session },
-        error: sessionError
-      } = await supabase.auth.getSession();
-
-      if (sessionError) {
-        console.error("[EROARE ❌] Nu am putut obține sesiunea Supabase:", sessionError.message);
-      }
-
-      if (!session) {
-        console.warn("[STOP ⛔] Sesiunea este null (Utilizatorul NU este logat în Supabase Auth).");
-        setProfil(null);
-        setSeIncarca(false);
-        return;
-      }
-
-      console.log("[SUCCES ✅] Sesiune găsită pentru user ID:", session.user.id, "Email:", session.user.email);
-
-      // Căutăm profilul în admin_profiles
-      console.log("[DEBUG 2] Caut în tabela 'admin_profiles' după id:", session.user.id);
-      
-      const { data, error } = await supabase
-        .from("admin_profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error("[EROARE ❌] Supabase a dat eroare la interogarea 'admin_profiles':", error.message, error.details, error.hint);
-        setProfil(null);
-      } else if (!data) {
-        console.error("[STOP ⛔] Sesiunea există, DAR userul cu acest ID NU a fost găsit în tabela 'admin_profiles'!");
-      } else {
-        console.log("[SUCCES 🚀] Profil găsit în 'admin_profiles':", data);
-        setProfil(data as AdminProfile);
-      }
-
-      setSeIncarca(false);
-    }
-
-    incarcaProfil();
-
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("[EVENT 🔄 Auth State Schimbat]:", event, session?.user?.email);
-      incarcaProfil();
-    });
-
-    return () => listener.subscription.unsubscribe();
-  }, []);
-
-  async function logout() {
-    await supabase.auth.signOut();
-    setProfil(null);
+// Verificare Cloudflare Turnstile
+async function verifyTurnstile(token: string) {
+  if (!process.env.TURNSTILE_SECRET_KEY && process.env.NODE_ENV === 'development') {
+    return true
   }
 
-  return (
-    <AuthContext.Provider
-      value={{
-        profil,
-        seIncarca,
-        esteSuperadmin: profil?.role === "superadmin",
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  if (!token) {
+    return false
+  }
+
+  try {
+    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        secret: process.env.TURNSTILE_SECRET_KEY!,
+        response: token,
+      }),
+    })
+
+    const outcome = await response.json()
+    return outcome.success
+  } catch (error) {
+    console.error('Eroare rețea/server la verificarea Turnstile:', error)
+    return false
+  }
 }
 
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth trebuie folosit în interiorul AuthProvider");
-  return ctx;
+// Înregistrare încercare login
+async function recordAttempt(email: string, isSuccessful: boolean) {
+  try {
+    const supabaseAdmin = await createAdminClient()
+    await supabaseAdmin.from('login_attempts').insert({ 
+      email: email.trim().toLowerCase(), 
+      is_successful: isSuccessful 
+    })
+  } catch (e) {
+    console.error('Eroare la înregistrarea încercării de login:', e)
+  }
+}
+
+// Autentificare clasică cu Email și Parolă
+export async function signIn(prevState: any, formData: FormData) {
+  const rawEmail = formData.get('email') as string
+  const rawPassword = formData.get('password') as string
+  const turnstileToken = formData.get('cf-turnstile-response') as string
+
+  if (!rawEmail || !rawPassword) {
+    return { error: 'Emailul și parola sunt obligatorii.' }
+  }
+
+  const email = rawEmail.trim().toLowerCase()
+  const password = rawPassword.trim()
+
+  const isHuman = await verifyTurnstile(turnstileToken)
+  if (!isHuman) {
+    return { error: 'Validare bot eșuată. Reîncărcați pagina.' }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+
+  if (error) {
+    await recordAttempt(email, false)
+    return { error: 'Email sau parolă incorectă.' }
+  }
+
+  const supabaseAdmin = await createAdminClient()
+  const { data: adminRecord, error: adminError } = await supabaseAdmin
+    .from('admin_profiles')
+    .select('email')
+    .eq('email', email)
+    .maybeSingle()
+
+  if (adminError || !adminRecord) {
+    await recordAttempt(email, false)
+    await supabase.auth.signOut()
+    return { error: 'Acces neautorizat. Această adresă de email nu are permisiuni de administrator.' }
+  }
+
+  await recordAttempt(email, true)
+
+  return {
+    success: true,
+    redirectTo: '/dsaidsuifds/dashbord'
+  }
 }
