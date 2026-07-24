@@ -4,7 +4,7 @@ import { useEffect, useState, useActionState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
-import { signIn } from '@/app/dsaidsuifds/login/actions' // Acum folosim doar signIn
+import { signIn } from '@/app/dsaidsuifds/login/actions' // Folosim cale relativă directă dacă actions.ts e în același folder
 
 import WaveBackground from '@/components/auth/WaveBackground'
 import Mascot from '@/components/auth/Mascot'
@@ -75,7 +75,6 @@ export default function LoginForm() {
             />
           </label>
 
-          {/* CÂMPUL NOU PENTRU PAROLĂ */}
           <label className="auth-field">
             <span>Parolă</span>
             <input
@@ -109,7 +108,6 @@ export default function LoginForm() {
       </div>
 
       <style jsx global>{`
-        /* Păstrează exact aceleași stiluri CSS pe care le aveai deja */
         .auth-shell { position: relative; min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; font-family: var(--font-sans, 'Inter', system-ui, sans-serif); background-color: #0c0705; }
         .auth-card { position: relative; z-index: 5; width: 100%; max-width: 26rem; padding: 2.25rem 2rem 2rem; border-radius: 1.5rem; background: rgba(12, 7, 5, 0.75); backdrop-filter: blur(22px) saturate(140%); -webkit-backdrop-filter: blur(22px) saturate(140%); border: 1px solid rgba(255, 179, 71, 0.18); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55); }
         .auth-card__seam { position: absolute; top: 0; left: 12%; right: 12%; height: 1px; background: linear-gradient(90deg, transparent, #ff8a2b, transparent); opacity: 0.7; }
