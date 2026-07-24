@@ -56,7 +56,11 @@ export default function FileUploadField({
     <div className={`ogw-upload ${seIncarca ? "ogw-upload--loading" : ""}`}>
       <label className="ogw-field__label">{eticheta}</label>
       
-      <label className={`ogw-upload__zona ${seIncarca ? "is-disabled" : ""}`}>
+      {/* Folosim un div interactiv în loc de label imbricat pentru a preveni dublarea evenimentelor */}
+      <div 
+        className={`ogw-upload__zona ${seIncarca ? "is-disabled" : ""}`}
+        onClick={() => !seIncarca && inputRef.current?.click()}
+      >
         <input
           ref={inputRef}
           type="file"
@@ -67,7 +71,7 @@ export default function FileUploadField({
           className="ogw-upload__input"
         />
         <span>{seIncarca ? "Se încarcă fișierul..." : "Alege fișier sau trage aici"}</span>
-      </label>
+      </div>
 
       {eroare && (
         <p className="ogw-field__eroare" role="alert">
