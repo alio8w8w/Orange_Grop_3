@@ -85,7 +85,11 @@ export default function LoginForm() {
               <TurnstileWidget onVerify={setTurnstileToken} />
               
               {/* Câmp ascuns care transmite token-ul Turnstile către Server Action */}
-             
+              <input
+                type="hidden"
+                name="cf-turnstile-response"
+                value={turnstileToken}
+              />
             </div>
 
             {signInState.error && (
