@@ -43,13 +43,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Profilul (nume, rol) e citit din tabela "profiles", populata manual
+      // Profilul (nume, rol) e citit din tabela "admin_profiles", populata manual
       // pentru cei 4 conturi admise — nu se pot inregistra alti useri din UI.
       const { data, error } = await supabase
-        .from("profiles")
+        .from("admin_profiles")
         .select("*")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("[auth] nu am putut incarca profilul:", error.message);
