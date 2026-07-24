@@ -57,17 +57,19 @@ async function recordAttempt(email: string, isSuccessful: boolean) {
   }
 }
 
-// ETAPA 1: Solicitare Cod OTP pe Email / Link
+// Autentificare clasică cu Email și Parolă
 export async function signIn(prevState: any, formData: FormData) {
   const rawEmail = formData.get('email') as string
+  const rawPassword = formData.get('password') as string
   const turnstileToken = formData.get('cf-turnstile-response') as string
 
-  if (!rawEmail) {
-    return { error: 'Adresa de email este obligatorie.' }
+  if (!rawEmail || !rawPassword) {
+    return { error: 'Emailul și parola sunt obligatorii.' }
   }
 
-  // Igienizare email
+  // Igienizare
   const email = rawEmail.trim().toLowerCase()
+  const password = rawPassword.trim()
 
   // 1. Verificare Turnstile Bot Protection
   const isHuman = await verifyTurnstile(turnstileToken)
@@ -75,7 +77,7 @@ export async function signIn(prevState: any, formData: FormData) {
     return { error: 'Validare bot eșuată. Reîncărcați pagina sau bifați verificarea Turnstile.' }
   }
 
-  const supabaseAdmin = createAdminClient()
+  const supabaseAdmin = await createAdminClient()
 
   // 2. Verificare dacă emailul este înregistrat în tabelul de admini
   const { data: adminRecord, error: adminError } = await supabaseAdmin
@@ -86,64 +88,27 @@ export async function signIn(prevState: any, formData: FormData) {
 
   if (adminError || !adminRecord) {
     await recordAttempt(email, false)
-    return { error: 'Acces neautorizat. Această adresă de email nu este înregistrată ca administrator.' }
+    return { error: 'Acces neautorizat. Această adresă de email nu are permisiuni de administrator.' }
   }
 
-  // 3. Trimitere OTP pe Email folosind clientul Admin
-  const { error } = await supabaseAdmin.auth.signInWithOtp({
+  // 3. Autentificare efectivă cu Supabase Auth (folosind clientul normal, nu admin)
+  const supabase = await createClient()
+  const { error } = await supabase.auth.signInWithPassword({
     email,
-    options: {
-      shouldCreateUser: false, // Blochează crearea de conturi noi neautorizate
-    },
+    password,
   })
 
   if (error) {
-    console.error('[SUPABASE ERROR DETAILED]:', error)
+    console.error('[SUPABASE AUTH ERROR]:', error.message)
     await recordAttempt(email, false)
-    
-    if (error.status === 429) {
-      return { error: 'Prea multe solicitări trimise. Așteptați câteva minute.' }
-    }
-    return { error: `Eroare Supabase: ${error.message}` }
-  } else {
-    await recordAttempt(email, true)
+    return { error: 'Email sau parolă incorectă.' }
   }
+
+  // Dacă ajungem aici, autentificarea a reușit
+  await recordAttempt(email, true)
 
   return {
     success: true,
-    message: 'Dacă adresa există în sistem, un cod de verificare a fost trimis pe email.',
-    email: email,
-  }
-}
-
-// ETAPA 2: Verificare cod OTP primit pe Email (8 cifre)
-export async function verifyOTP(prevState: any, formData: FormData) {
-  const code = formData.get('code') as string
-  const email = formData.get('email') as string
-
-  if (!code || !email) {
-    return { error: 'Introduceți codul primit pe email.' }
-  }
-
-  const cleanCode = code.trim()
-  const cleanEmail = email.trim().toLowerCase()
-
-  const supabase = await createClient()
-
-  // Verificare OTP cu Supabase
-  const { error } = await supabase.auth.verifyOtp({
-    email: cleanEmail,
-    token: cleanCode,
-    type: 'email',
-  })
-
-  if (error) {
-    return { error: 'Cod invalid sau expirat. Verificați căsuța de email.' }
-  }
-
-  // Redirecționare către dashboard după autentificare reușită
-  return { 
-    success: true, 
-    redirectTo: '/dsaidsuifds/dashbord' 
+    redirectTo: '/dsaidsuifds/dashbord'
   }
 }
