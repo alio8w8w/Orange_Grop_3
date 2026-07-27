@@ -24,10 +24,10 @@ export function HeroSection() {
       <OrbField variant="warm" />
 
       <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
-        <p className="font-display text-xs font-bold uppercase tracking-[0.4em] text-brand-orange sm:text-sm">
+        <p className="text-xs font-bold uppercase tracking-[0.4em] text-brand-orange sm:text-sm">
           Orange · Group 3
         </p>
-        <h1 className="mt-6 font-display text-5xl font-black uppercase leading-[0.95] tracking-tight text-balance text-brand-white sm:text-7xl md:text-8xl">
+        <h1 className="mt-6 text-5xl font-black uppercase leading-[0.95] tracking-tight text-balance text-brand-white sm:text-7xl md:text-8xl">
           The Best Choice
           <span className="mt-2 block text-brand-orange">Orange / Group 3</span>
         </h1>
@@ -39,7 +39,7 @@ export function HeroSection() {
 
         <a
           href="#members"
-          className="mt-10 inline-flex items-center gap-2 rounded-full bg-brand-orange px-6 py-3 font-display text-sm font-bold uppercase tracking-wide text-brand-black transition-transform hover:scale-105"
+          className="mt-10 inline-flex items-center gap-2 rounded-full bg-brand-orange px-6 py-3 text-sm font-bold uppercase tracking-wide text-brand-black transition-transform hover:scale-105"
         >
           Meet the members
           <ArrowDown className="h-4 w-4" />
