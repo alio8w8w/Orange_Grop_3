@@ -6,7 +6,7 @@ export const routing = defineRouting({
   locales: ['ro', 'en'],
 
   // Limba implicită folosită când nu există un prefix în URL
-  defaultLocale: 'ro',
+  defaultLocale: 'en',
 
   // Opțional: poți seta 'as-needed' dacă nu vrei prefixul /ro în URL pentru limba implicită
   // localePrefix: 'as-needed'

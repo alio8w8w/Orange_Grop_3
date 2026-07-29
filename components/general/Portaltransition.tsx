@@ -1,17 +1,18 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-
-type Phase = 'idle' | 'swirl-in' | 'showcase' | 'swirl-out' | 'flash' | 'done'
+import { useEffect, useMemo, useState } from 'react'
 
 const PHOTOS = ['/images/intro1.png', '/images/intro2.png', '/images/intro3.png']
 
-// Timpii au fost ajustați pentru a se potrivi cu noul flux rapid
+// Timpii controlați pentru fiecare fază a animației (în milisecunde)
 const TIMINGS = {
-  swirlIn: 600,  // Vortexul inițial care se adună
-  showcase: 60,  // 3 poze * 20ms fiecare (prezentare statică)
-  swirlOut: 800, // Vârtejul final care se accelerează și se estompează
-  flash: 260,    // Flash-ul final înainte de navigare
+  rollScene1: 3500,     // Mutăm camera la poza 1
+  rollScene2: 6000,     // Mutăm camera la poza 2
+  rollScene3: 8500,     // Mutăm camera la poza 3
+  startFall: 11000,     // Fundalul zboară în sus (intrăm în ecran negru)
+  orangesDrop: 11500,   // Portocalele cad și ele de pe ecran în jos
+  lightUp: 13500,       // Se face lumină treptat (după 2 secunde de negru)
+  navigate: 15000       // Declanșăm navigarea
 }
 
 const COPY = {
@@ -19,16 +20,6 @@ const COPY = {
   en: 'READY TO MEET ORANGE GROUP 3?',
 }
 
-/**
- * PortalTransition
- * ----------------
- * Secvența modificată:
- * 1. swirl-in: Vortexul se strânge (negru).
- * 2. showcase: Se afișează cele 3 poze succesiv (câte 20ms).
- * 3. swirl-out: Pozele intră într-un efect de vârtej stilizat (ca în imagine).
- * 4. flash: Ecran alb-portocaliu → negru.
- * 5. done: Navigare și ascundere.
- */
 export default function PortalTransition({
   active,
   locale,
@@ -38,221 +29,216 @@ export default function PortalTransition({
   locale: 'ro' | 'en'
   onNavigate: () => void
 }) {
-  const [phase, setPhase] = useState<Phase>('idle')
-  const [showcaseIndex, setShowcaseIndex] = useState(0)
-  const timeouts = useRef<ReturnType<typeof setTimeout>[]>([])
-  const showcaseInterval = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [panX, setPanX] = useState(0) // Controlăm mișcarea stânga-dreapta (0, 100, 200, 300)
+  const [panY, setPanY] = useState(0) // Controlăm căderea (0, 100)
+  const [orangesFallingOut, setOrangesFallingOut] = useState(false)
+  const [lightUp, setLightUp] = useState(false)
+
+  // Generăm 20 de portocale o singură dată folosind useMemo pentru a evita re-render-urile ciudate
+  const oranges = useMemo(() => {
+    return Array.from({ length: 20 }).map((_, i) => ({
+      id: i,
+      // Punct de start random pe axa X (între 0 și 10vw)
+      startX: Math.random() * 10,
+      // Delay random pentru a nu cădea toate exact în aceeași milisecundă (0 - 600ms)
+      delay: Math.random() * 600 
+    }))
+  }, [])
 
   useEffect(() => {
     if (!active) return
 
-    setPhase('swirl-in')
+    // Resetăm state-ul (în caz că e refolosit)
+    setPanX(0)
+    setPanY(0)
+    setOrangesFallingOut(false)
+    setLightUp(false)
 
-    // 1. Faza de adunare a vortexului (swirl-in)
-    timeouts.current.push(
-      setTimeout(() => {
-        setPhase('showcase')
-        // 2. Faza de prezentare statică rapidă (3 poze x 20ms)
-        let currentPhoto = 0
-        showcaseInterval.current = setInterval(() => {
-          currentPhoto++
-          setShowcaseIndex(currentPhoto)
-          if (currentPhoto >= PHOTOS.length - 1) {
-            if (showcaseInterval.current) clearInterval(showcaseInterval.current)
-          }
-        }, 20)
-      }, TIMINGS.swirlIn)
-    )
-
-    // 3. Tranziția spre vârtejul final (swirl-out)
-    const swirlOutStart = TIMINGS.swirlIn + TIMINGS.showcase
-    timeouts.current.push(
-      setTimeout(() => {
-        setPhase('swirl-out')
-      }, swirlOutStart)
-    )
-
-    // 4. Flash-ul final și navigarea
-    const flashStart = swirlOutStart + TIMINGS.swirlOut
-    timeouts.current.push(
-      setTimeout(() => {
-        setPhase('flash')
-        onNavigate() // Navigarea are loc exact când începe flash-ul negru
-      }, flashStart)
-    )
-
-    // 5. Finalizarea tranziției
-    const doneStart = flashStart + TIMINGS.flash
-    timeouts.current.push(
-      setTimeout(() => {
-        setPhase('done')
-      }, doneStart)
-    )
+    // Programăm toată secvența cinematografică
+    const t1 = setTimeout(() => setPanX(100), TIMINGS.rollScene1)
+    const t2 = setTimeout(() => setPanX(200), TIMINGS.rollScene2)
+    const t3 = setTimeout(() => setPanX(300), TIMINGS.rollScene3)
+    const t4 = setTimeout(() => setPanY(100), TIMINGS.startFall)
+    const t5 = setTimeout(() => setOrangesFallingOut(true), TIMINGS.orangesDrop)
+    const t6 = setTimeout(() => setLightUp(true), TIMINGS.lightUp)
+    const t7 = setTimeout(() => onNavigate(), TIMINGS.navigate)
 
     return () => {
-      timeouts.current.forEach(clearTimeout)
-      timeouts.current = []
-      if (showcaseInterval.current) clearInterval(showcaseInterval.current)
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+      clearTimeout(t4); clearTimeout(t5); clearTimeout(t6); clearTimeout(t7);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active])
+  }, [active, onNavigate])
 
-  if (phase === 'idle' || phase === 'done') return null
-
-  const isSwirling = phase === 'swirl-in' || phase === 'swirl-out'
-  const isShowingPhotos = phase === 'showcase' || phase === 'swirl-out'
+  if (!active) return null
 
   return (
-    <div className={`portal portal--${phase}`}>
-      {isSwirling && (
-        <>
-          <div className="portal__rays">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <span key={i} className="portal__ray" style={{ ['--i' as any]: i }} />
-            ))}
-          </div>
-          <div className="portal__vortex-core" />
-        </>
-      )}
-
-      {isShowingPhotos && (
-        <div className="portal__photos-container">
+    <div className="portal">
+      
+      {/* LAYER 1: Fundalurile care se mișcă (Panoramare X și Y) */}
+      <div 
+        className="portal__backgrounds" 
+        style={{ transform: `translateX(-${panX}vw) translateY(-${panY}vh)` }}
+      >
+        <div className="scene-row-top">
+          {/* Ecran 0: Gol (aici cad portocalele initial) */}
+          <div className="scene scene--empty"></div>
+          {/* Ecranele 1, 2, 3: Pozele intro */}
           {PHOTOS.map((src, i) => (
-            <img
-              key={src}
-              src={src}
-              alt=""
-              className={`portal__photo ${i === showcaseIndex ? 'is-visible' : ''}`}
-            />
+            <div key={src} className="scene">
+              <img src={src} alt={`Intro ${i + 1}`} className="scene__img" />
+            </div>
           ))}
-          {/* Acest element creează efectul de vârtej peste poze în 'swirl-out' */}
-          <div className={`portal__vortex-overlay ${phase === 'swirl-out' ? 'is-active' : ''}`} />
         </div>
-      )}
+        {/* Rândul de jos: Totul negru (pentru efectul de cădere) */}
+        <div className="scene-row-bottom"></div>
+      </div>
 
-      {(phase === 'flash') && (
-        <p className="portal__text">{COPY[locale]}</p>
-      )}
+      {/* LAYER 2: Portocalele. Urmăresc camera pe X, dar au propria cădere pe Y la final */}
+      <div 
+        className={`portal__oranges ${orangesFallingOut ? 'is-falling' : ''}`}
+        style={{ transform: `translateX(-${panX}vw)` }}
+      >
+        {oranges.map((o) => (
+          <div 
+            key={o.id} 
+            className="orange-pos" 
+            style={{ '--start-x': o.startX, '--delay': o.delay } as React.CSSProperties}
+          >
+            <img 
+              src="/images/portocala1.png" 
+              alt="Portocala" 
+              className="orange-spin" 
+            />
+          </div>
+        ))}
+      </div>
 
-      <div className="portal__flashlayer" />
+      {/* LAYER 3: Lumina de la final și Textul */}
+      <div className={`portal__lightup ${lightUp ? 'is-active' : ''}`}>
+        {lightUp && (
+          <p className="portal__text">{COPY[locale]}</p>
+        )}
+      </div>
 
       <style jsx>{`
         .portal {
           position: fixed;
           inset: 0;
           z-index: 100;
-          display: flex;
-          align-items: center;
-          justify-content: center;
           overflow: hidden;
           background: #050302;
         }
 
-        /* --- Vortex Rays & Core (swirl-in) --- */
-        .portal__vortex-core {
+        /* --- FUNDALURI --- */
+        .portal__backgrounds {
           position: absolute;
-          width: 40vmax;
-          height: 40vmax;
-          border-radius: 50%;
-          background: conic-gradient(from 0deg, #ffe8c2 0deg, #ff8a2b 60deg, #b3230a 140deg, #050302 200deg, #ff6a1a 280deg, #ffe8c2 360deg);
-          filter: blur(25px);
-          opacity: 0;
-          animation: vortex-core-in ${TIMINGS.swirlIn}ms ease-in forwards, vortex-spin-slow 4s linear infinite;
+          top: 0; left: 0;
+          width: 400vw;
+          height: 200vh;
+          /* Tranziție fină de tip ease-in-out pentru mișcarea camerei */
+          transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        @keyframes vortex-core-in {
-          0% { opacity: 0; transform: scale(0.1); }
-          100% { opacity: 0.7; transform: scale(1); }
+        .scene-row-top {
+          display: flex;
+          width: 400vw;
+          height: 100vh;
         }
-        @keyframes vortex-spin-slow { to { transform: rotate(360deg); } }
-
-        .portal__rays { position: absolute; inset: 0; }
-        .portal__ray {
-          position: absolute; top: 50%; left: 50%;
-          width: 150vmax; height: 4vmax;
-          transform-origin: left center;
-          transform: rotate(calc(var(--i) * 60deg)) translateX(-100%) scaleX(0);
-          background: linear-gradient(90deg, transparent 0%, #ff8a2b 55%, #050302 100%);
-          opacity: 0;
+        .scene-row-bottom {
+          width: 400vw;
+          height: 100vh;
+          background: #000; /* Bezna în care cădem */
         }
-        .portal--swirl-in .portal__ray {
-          animation: ray-in ${TIMINGS.swirlIn}ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-          animation-delay: calc(var(--i) * 30ms);
+        .scene {
+          width: 100vw;
+          height: 100vh;
+          position: relative;
         }
-        @keyframes ray-in {
-          0% { opacity: 0; transform: rotate(calc(var(--i) * 60deg)) translateX(-100%) scaleX(0.2); }
-          100% { opacity: 0.6; transform: rotate(calc(var(--i) * 60deg)) translateX(0%) scaleX(1); }
+        .scene--empty {
+          background: #050302;
         }
-
-        /* --- Photos Showcase (showcase & swirl-out) --- */
-        .portal__photos-container {
-          position: absolute; inset: 0;
-          width: 100%; height: 100%;
-        }
-        .portal__photo {
-          position: absolute; inset: 0;
-          width: 100%; height: 100%;
+        .scene__img {
+          width: 100%;
+          height: 100%;
           object-fit: cover;
-          opacity: 0;
-          transition: opacity 15ms ease-in-out; /* Tranziție super rapidă între poze */
-          /* Aplicăm stilistica din imagine: ton cald, portocaliu-vibrant */
-          filter: sepia(0.4) saturate(2.5) hue-rotate(-15deg) brightness(0.8);
-        }
-        .portal__photo.is-visible {
-          opacity: 0.8;
+          filter: sepia(0.2) saturate(1.5) brightness(0.8);
         }
 
-        /* --- Vortex Effect Over Photos (swirl-out) --- */
-        .portal__vortex-overlay {
-          position: absolute; inset: 0;
-          background: radial-gradient(circle at center, transparent 0%, #050302 90%);
-          mix-blend-mode: multiply;
-          opacity: 0;
+        /* --- PORTOCALE --- */
+        .portal__oranges {
+          position: absolute;
+          top: 0; left: 0;
+          width: 400vw;
+          height: 100vh;
+          transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* Clasa aplicată când portocalele cad și ele în prăpastie */
+        .portal__oranges.is-falling {
+          transform: translateX(-300vw) translateY(120vh) !important;
+          transition: transform 1.5s ease-in;
+        }
+
+        /* Poziționarea pe axa generală (Cădere -> Rostogolire lungă 400vw) */
+        .orange-pos {
+          position: absolute;
+          width: 55px; /* Un pic mai mici de medii */
+          height: 55px;
+          animation: orange-pos-anim 11s linear forwards;
+          animation-delay: calc(var(--delay) * 1ms);
+        }
+        @keyframes orange-pos-anim {
+          0% { transform: translate(calc(var(--start-x) * 1vw), -20vh); }
+          /* La 9% din timp (aprox 1 sec) aterizează jos */
+          9% { transform: translate(calc(var(--start-x) * 1vw + 5vw), 85vh); } 
+          /* Restul timpului se rostogolesc până la capătul lumii de 400vw */
+          100% { transform: translate(calc(var(--start-x) * 1vw + 380vw), 85vh); }
+        }
+
+        /* Învârtirea propriu-zisă a imaginii (începe după ce aterizează) */
+        .orange-spin {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          filter: drop-shadow(0px 8px 5px rgba(0,0,0,0.4));
+          animation: orange-spin-anim 10s linear forwards;
+          animation-delay: calc((var(--delay) + 900) * 1ms);
+        }
+        @keyframes orange-spin-anim {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(2500deg); }
+        }
+
+        /* --- FINAL LUMINOS --- */
+        .portal__lightup {
+          position: absolute;
+          inset: 0;
+          z-index: 50;
           pointer-events: none;
-          transition: opacity ${TIMINGS.swirlOut}ms ease-in;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
         }
-        .portal__vortex-overlay.is-active {
-          opacity: 1;
-          /* Adăugăm un efect de radiație tipic stilisticii din poză, combinat cu un gradient conic */
-          background:
-            /* Razele de lumină stilistica din poză (exagerate circular) */
-            repeating-conic-gradient(from 0deg, rgba(255,122,26,0.1) 0deg 10deg, transparent 10deg 20deg),
-            /* Gaura neagră centrală care se extinde */
-            radial-gradient(circle at center, #050302 0%, #050302 20%, rgba(5,3,2,0) 80%);
-          animation: vortex-spin-fast ${TIMINGS.swirlOut}ms linear forwards;
+        .portal__lightup.is-active {
+          animation: flash-white 1.5s ease-in forwards;
         }
-        @keyframes vortex-spin-fast {
-          0% { transform: scale(1) rotate(0deg); opacity: 0; }
-          100% { transform: scale(2) rotate(720deg); opacity: 0.9; }
+        @keyframes flash-white {
+          0% { opacity: 0; background: transparent; }
+          40% { opacity: 1; background: #ffe8c2; } /* Se face treptat lumină caldă */
+          100% { opacity: 1; background: #fff; } /* Pagina devine complet albă înainte de redirect */
         }
 
-        /* --- Text Pop (flash) --- */
         .portal__text {
-          position: relative; z-index: 20;
-          margin-top: 15vh; max-width: 90vw;
-          text-align: center; font-family: var(--font-display, sans-serif);
-          font-weight: 700; font-size: clamp(2rem, 7vw, 4.5rem);
-          color: #ffe9d6;
-          text-shadow: 0 0 30px #ff8a2b, 0 0 60px #b3230a;
-          animation: text-pop-final 300ms ease-out forwards;
+          color: #ff8a2b;
+          font-family: var(--font-display, sans-serif);
+          font-weight: 700;
+          font-size: clamp(2rem, 7vw, 4.5rem);
+          text-align: center;
+          text-shadow: 0 0 20px rgba(0,0,0,0.5);
+          animation: text-pop 500ms ease-out forwards;
         }
-        @keyframes text-pop-final {
+        @keyframes text-pop {
           0% { opacity: 0; transform: scale(0.5); }
           100% { opacity: 1; transform: scale(1); }
-        }
-
-        /* --- Final Flash Layer --- */
-        .portal__flashlayer {
-          position: absolute; inset: 0;
-          z-index: 30;
-          opacity: 0; pointer-events: none;
-        }
-        .portal--flash .portal__flashlayer {
-          animation: flash-out-portal ${TIMINGS.flash}ms ease-in forwards;
-        }
-        @keyframes flash-out-portal {
-          0% { opacity: 1; background: #ffe8c2; } /* Flash Alb-Galbui */
-          40% { opacity: 1; background: #ff7a1a; } /* Portocaliu Intens */
-          100% { opacity: 1; background: #050302; } /* Negru Final */
         }
       `}</style>
     </div>
