@@ -7,9 +7,12 @@ import { useTeam } from '@/components/team-context'
 export function MembersGrid() {
   const { members, setActiveMemberId } = useTeam()
 
+  // Numărul total de membrii din tabelul cvs, formatat cu 2 cifre (ex: "01", "04")
+  const totalCount = String(members.length).padStart(2, '0')
+
   return (
     <section id="members" className="relative overflow-hidden py-20 sm:py-28">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-brand-orange">
@@ -19,12 +22,14 @@ export function MembersGrid() {
               Meet the members
             </h2>
           </div>
+          {/* Aici se afișează numărul real din baza de date (ex: 01 în loc de 06) */}
           <span className="hidden font-display text-6xl font-black text-brand-white/10 sm:block">
-            06
+            {totalCount}
           </span>
         </div>
 
-        <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Toți membrii sunt așezați pe o singură linie pe ecrane mari (lg:grid-cols-4) */}
+        <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {members.map((m, i) => (
             <li key={m.id}>
               <button
@@ -34,10 +39,11 @@ export function MembersGrid() {
               >
                 <span className="relative aspect-[4/5] w-full overflow-hidden">
                   <Image
-                    src={m.profilePicture || '/placeholder.svg'}
-                    alt={`${m.firstName} ${m.lastName}`}
+                    // Folosește coloana `poza_url` din Supabase
+                    src={m.poza_url || '/placeholder.svg'}
+                    alt={`${m.nume} ${m.prenume}`}
                     fill
-                    sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 45vw, 100vw"
                     className="object-cover grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-105"
                   />
                   <span className="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/20 to-transparent" />
@@ -48,10 +54,12 @@ export function MembersGrid() {
                 <span className="flex items-center justify-between gap-3 p-5">
                   <span className="min-w-0">
                     <span className="block font-display text-xs font-bold uppercase tracking-wide text-brand-orange">
-                      {m.role}
+                      {/* Rolul / funcția membrului */}
+                      {m.role || m.functie || 'Member'}
                     </span>
-                    <span className="mt-1 block truncate font-display text-xl font-extrabold text-brand-white">
-                      {m.firstName} {m.lastName}
+                    <span className="mt-1 block truncate font-display text-lg font-extrabold text-brand-white">
+                      {/* Folosește coloanele `nume` și `prenume` din Supabase */}
+                      {m.nume} {m.prenume}
                     </span>
                   </span>
                   <ArrowUpRight className="h-5 w-5 shrink-0 text-brand-white/40 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand-orange" />
