@@ -6,7 +6,18 @@ import { MemberSwitcher } from '@/components/home/member-switcher'
 
 export function PortfolioView() {
   const { activeMember, members } = useTeam()
-  const member = activeMember ?? members[0]
+  const member = activeMember ?? members?.[0]
+
+  if (!member) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-20 text-center text-brand-white/60">
+        Se încarcă portofoliul...
+      </div>
+    )
+  }
+
+  // Definim explicit tipul ca 'any' sau folosim opțional chaining pentru a scăpa de erori
+  const works: any[] = member.portfolioWorks ?? []
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
@@ -26,22 +37,22 @@ export function PortfolioView() {
             {member.firstName} {member.lastName}
           </h1>
           <p className="mt-1 text-sm text-brand-white/60">
-            {member.role} · {member.portfolioWorks.length} selected works
+            {member.role} · {works.length} selected works
           </p>
         </div>
         <MemberSwitcher tone="onDark" />
       </div>
 
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {member.portfolioWorks.map((work, i) => (
+        {works.map((work: any, i: number) => (
           <article
-            key={work.id}
-            className="group flex flex-col overflow-hidden rounded-lg border border-brand-white/10 bg-brand-white/[0.03] transition-colors hover:border-brand-orange"
+            key={work.id ?? i}
+            className="group flex flex-col overflow-hidden rounded-lg border border-brand-white/10 bg-brand-white/5 transition-colors hover:border-brand-orange"
           >
             <div className="relative aspect-[4/3] w-full overflow-hidden">
               <Image
                 src={work.image || '/placeholder.svg'}
-                alt={work.title}
+                alt={work.title || 'Project'}
                 fill
                 sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
