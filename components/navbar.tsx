@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition, useRef } from 'react'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { useTeam, type ViewKey } from '@/components/team-context'
 import { cn } from '@/lib/utils'
@@ -13,9 +13,9 @@ export function Navbar() {
   const t = useTranslations('Navbar')
   const currentLocale = useLocale()
   const router = useRouter()
+  const pathname = usePathname()
   const [isPending, startTransition] = useTransition()
 
-  // Am scos teamMembers de aici pentru că dădea eroare TypeScript
   const { view, setView, setActiveMemberId, activeMember } = useTeam()
   const [scrolled, setScrolled] = useState(false)
   const [totalMembers, setTotalMembers] = useState<number | null>(null)
@@ -123,11 +123,25 @@ export function Navbar() {
     }
   }, [LINKS.length])
 
+  // >>> FUNCȚIA DE SCHIMBARE A LIMBII CORECTATĂ <<<
   const toggleLanguage = (newLocale: string) => {
     if (newLocale === currentLocale) return
-    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000`
+
+    // 1. Setăm cookie-ul explicit pentru next-intl
+    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`
+
     startTransition(() => {
-      router.refresh()
+      // Dacă folosești rute dinamice cu prefix de limbă (ex: /ro/despre -> /en/despre)
+      // poți înlocui segmentul de limbă din pathname:
+      const segments = pathname.split('/')
+      if (segments[1] === 'ro' || segments[1] === 'en') {
+        segments[1] = newLocale
+        const newPathname = segments.join('/')
+        router.push(newPathname)
+      } else {
+        // Dacă folosești doar cookie-uri fără prefix în URL
+        router.refresh()
+      }
     })
   }
 
@@ -174,7 +188,7 @@ export function Navbar() {
             </button>
           </div>
 
-          {/* Status Membri din Baza de Date (Dreapta Fixat) - TRADUS DINAMIC */}
+          {/* Status Membri din Baza de Date (Dreapta Fixat) */}
           <div className="absolute right-8 top-3 flex items-center rounded-full border border-brand-white/10 bg-brand-black/60 px-5 py-2 text-sm text-brand-white/70 shadow-lg backdrop-blur-md z-30">
             {activeMember ? (
               <span className="font-bold text-brand-orange">
