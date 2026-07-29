@@ -1,15 +1,16 @@
 {
   "Navbar": {
-  "home": "Home",
-  "skills": "Skills",
-  "portfolio": "Portfolio",
-  "biography": "Biography",
-  "studies": "Studies",
-  "experience": "Experience",
-  "competences": "Competences",
-  "social": "Social",
-  "membersCount": "{count, plural, =1 {1 member} other {# members}}"
-},
+    "home": "Home",
+    "skills": "Skills",
+    "portfolio": "Portfolio",
+    "biography": "Biography",
+    "studies": "Studies",
+    "experience": "Experience",
+    "competences": "Competences",
+    "social": "Social",
+    "member": "Member",
+    "members": "Members"
+  },
   "Hero": {
     "tag": "Orange · Group 3",
     "titleLine1": "The Best Choice",
