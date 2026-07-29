@@ -9,7 +9,15 @@ import {
 } from 'react'
 import { teamMembers, type TeamMember } from '@/lib/team-data'
 
-export type ViewKey = 'home' | 'skills' | 'portfolio'
+export type ViewKey =
+  | 'home'
+  | 'skills'
+  | 'portfolio'
+  | 'biography'
+  | 'studies'
+  | 'experience'
+  | 'competences'
+  | 'social'
 
 interface TeamContextValue {
   members: TeamMember[]

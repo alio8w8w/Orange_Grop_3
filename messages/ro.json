@@ -1,10 +1,15 @@
 {
   "Navbar": {
-    "home": "Acasă",
-    "skills": "Aptitudini",
-    "portfolio": "Portofoliu",
-    "noMember": "Niciun membru"
-  },
+  "home": "Acasă",
+  "skills": "Competențe",
+  "portfolio": "Portofoliu",
+  "biography": "Biografie",
+  "studies": "Studii",
+  "experience": "Experiență",
+  "competences": "Competențe",
+  "social": "Social",
+  "membersCount": "{count, plural, =1 {1 membru} other {# membri}}"
+},
   "Hero": {
     "tag": "Orange · Group 3",
     "titleLine1": "Cea mai bună alegere",
