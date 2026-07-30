@@ -1,7 +1,5 @@
 "use client";
 
-// components/admin/CVEditor.tsx
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import GlassPanel from "@/components/ui/GlassPanel";
@@ -133,7 +131,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
   }
 
   function adaugaPortofoliu() {
-    const item = { id: idNou(), titlu: "", url: "", descriere: "", imagini_url: [] } as any;
+    const item = { id: idNou(), titlu: "", tip_proiect: "website", url: "", descriere: "", imagini_url: [] } as any;
     actualizeaza("portofoliu", [...cv.portofoliu, item]);
   }
 
@@ -173,7 +171,6 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
   }
 
   function campuriObligatoriiCompletate() {
-    // Am exclus localitate, verificam doar campurile esentiale actualizate
     return (["nume", "prenume", "telefon", "email", "functie"] as (keyof CV)[]).every(
       (camp) => String(cv[camp] ?? "").trim().length > 0
     );
@@ -357,8 +354,12 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
               <input value={cv.localitate} onChange={(e) => actualizeaza("localitate", e.target.value)} placeholder="Oraș" />
             </div>
             <div>
-              <Eticheta text="Funcția (ex: Web Developer)" obligatoriu />
+              <Eticheta text="Funcția selectată (ex: Web Developer)" obligatoriu />
               <input value={cv.functie || ""} onChange={(e) => actualizeaza("functie", e.target.value)} placeholder="Funcția vizată" />
+            </div>
+            <div>
+              <Eticheta text="Funcția (Text liber / descriere suplimentară)" />
+              <input value={(cv as any).functie_text || ""} onChange={(e) => actualizeaza("functie_text" as any, e.target.value)} placeholder="ex: Senior Full Stack Developer & Consultant" />
             </div>
             <div>
               <Eticheta text="Data nașterii" />
@@ -556,6 +557,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             textButonAdauga="+ Adaugă proiect"
             gol="Niciun proiect adăugat."
             renderItem={(item: any) => {
+              const tipProiect = item.tip_proiect || "website";
               const descriereCurenta = item.descriere || "";
               const nrCuvinte = descriereCurenta.trim().split(/\s+/).filter((w: string) => w.length > 0).length;
 
@@ -567,85 +569,117 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
                     onChange={(e) => actualizeazaElementLista<PortofoliuItem>("portofoliu", item.id, { titlu: e.target.value })}
                   />
 
+                  {/* TUMBLER / COMUTATOR între Website și Galerie */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "1rem", background: "rgba(255,255,255,0.04)", padding: "0.5rem 0.75rem", borderRadius: "8px" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 600, opacity: 0.8 }}>Tip proiect:</span>
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <button
+                        type="button"
+                        onClick={() => actualizeazaElementLista<any>("portofoliu", item.id, { tip_proiect: "website" })}
+                        className={`ogw-btn ${tipProiect === "website" ? "ogw-btn--primar" : "ogw-btn--ghost"}`}
+                        style={{ padding: "0.25rem 0.75rem", fontSize: "0.75rem" }}
+                      >
+                        🌐 Website
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => actualizeazaElementLista<any>("portofoliu", item.id, { tip_proiect: "galerie" })}
+                        className={`ogw-btn ${tipProiect === "galerie" ? "ogw-btn--primar" : "ogw-btn--ghost"}`}
+                        style={{ padding: "0.25rem 0.75rem", fontSize: "0.75rem" }}
+                      >
+                        🖼️ Galerie
+                      </button>
+                    </div>
+                  </div>
+
                   <div>
                     <textarea
                       rows={2}
-                      placeholder="Descriere scurtă (maxim 20 cuvinte)..."
+                      placeholder="Descriere scurtă (maxim 50 cuvinte)..."
                       value={descriereCurenta}
                       onChange={(e) => {
                         const text = e.target.value;
                         const words = text.trim().split(/\s+/).filter((w: string) => w.length > 0);
-                        if (words.length <= 20 || text.length < descriereCurenta.length) {
+                        if (words.length <= 50 || text.length < descriereCurenta.length) {
                           actualizeazaElementLista<PortofoliuItem>("portofoliu", item.id, { descriere: text } as any);
                         }
                       }}
                       style={{ 
                         width: "100%", 
                         background: "rgba(255,255,255,0.05)", 
-                        border: nrCuvinte >= 20 ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
+                        border: nrCuvinte >= 50 ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
                         borderRadius: "8px", 
                         padding: "0.75rem", 
                         color: "white" 
                       }}
                     />
-                    <div style={{ fontSize: "0.75rem", textAlign: "right", color: nrCuvinte >= 20 ? "#ef4444" : "rgba(255,255,255,0.5)", marginTop: "0.25rem" }}>
-                      {nrCuvinte} / 20 cuvinte
+                    <div style={{ fontSize: "0.75rem", textAlign: "right", color: nrCuvinte >= 50 ? "#ef4444" : "rgba(255,255,255,0.5)", marginTop: "0.25rem" }}>
+                      {nrCuvinte} / 50 cuvinte
                     </div>
                   </div>
 
+                  {/* AFIȘARE DINAMICĂ ÎN FUNCȚIE DE TUMBLER */}
                   <div style={{ padding: "1rem", background: "rgba(255,255,255,0.02)", borderRadius: "8px", border: "1px dashed rgba(255,255,255,0.1)" }}>
-                    <p style={{ margin: "0 0 0.75rem 0", fontSize: "0.85rem", opacity: 0.8 }}>
-                      <strong>Prezentare proiect:</strong> Adaugă un link <strong>și/sau</strong> încarcă mai multe imagini (screenshots).
-                    </p>
-                    
-                    <input
-                      placeholder="Link (ex: https://github.com/... sau URL live)"
-                      value={item.url}
-                      onChange={(e) => actualizeazaElementLista<PortofoliuItem>("portofoliu", item.id, { url: e.target.value })}
-                      style={{ marginBottom: "1rem" }}
-                    />
-                    
-                    <FileUploadField
-                      eticheta="Încarcă imagini pentru acest proiect"
-                      adminId={adminId}
-                      bucket="portofoliu"
-                      acceptaMultiplu={true}
-                      onIncarcat={(url) => {
-                        setCv(prevCv => {
-                          const portofoliuActualizat = prevCv.portofoliu.map(p => {
-                            if (p.id === item.id) {
-                              const imaginiCurente = (p as any).imagini_url || [];
-                              return { ...p, imagini_url: [...imaginiCurente, url] };
-                            }
-                            return p;
-                          });
-                          return { ...prevCv, portofoliu: portofoliuActualizat };
-                        });
-                        setSeIncarcaFisier(false);
-                      }}
-                    />
+                    {tipProiect === "website" ? (
+                      <div>
+                        <p style={{ margin: "0 0 0.5rem 0", fontSize: "0.85rem", opacity: 0.8 }}>
+                          <strong>Link Website:</strong> Adaugă adresa URL unde poate fi accesat proiectul.
+                        </p>
+                        <input
+                          placeholder="Link (ex: https://github.com/... sau URL live)"
+                          value={item.url || ""}
+                          onChange={(e) => actualizeazaElementLista<PortofoliuItem>("portofoliu", item.id, { url: e.target.value })}
+                        />
+                      </div>
+                    ) : (
+                      <div>
+                        <p style={{ margin: "0 0 0.75rem 0", fontSize: "0.85rem", opacity: 0.8 }}>
+                          <strong>Galerie Imagini:</strong> Încarcă imagini (screenshots) pentru acest proiect.
+                        </p>
+                        
+                        <FileUploadField
+                          eticheta="Încarcă imagini galerie"
+                          adminId={adminId}
+                          bucket="portofoliu"
+                          acceptaMultiplu={true}
+                          onIncarcat={(url) => {
+                            setCv(prevCv => {
+                              const portofoliuActualizat = prevCv.portofoliu.map(p => {
+                                if (p.id === item.id) {
+                                  const imaginiCurente = (p as any).imagini_url || [];
+                                  return { ...p, imagini_url: [...imaginiCurente, url] };
+                                }
+                                return p;
+                              });
+                              return { ...prevCv, portofoliu: portofoliuActualizat };
+                            });
+                            setSeIncarcaFisier(false);
+                          }}
+                        />
 
-                    {item.imagini_url && item.imagini_url.length > 0 && (
-                      <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "1rem" }}>
-                        {item.imagini_url.map((imgUrl: string, idx: number) => (
-                          <div key={idx} style={{ position: "relative", width: "90px", height: "90px" }}>
-                            <img 
-                              src={imgUrl} 
-                              alt={`Preview ${idx + 1}`} 
-                              style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)" }} 
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const noiImagini = item.imagini_url.filter((u: string) => u !== imgUrl);
-                                actualizeazaElementLista<any>("portofoliu", item.id, { imagini_url: noiImagini });
-                              }}
-                              style={{ position: "absolute", top: "-6px", right: "-6px", background: "#ef4444", color: "white", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 4px rgba(0,0,0,0.3)" }}
-                            >
-                              ✕
-                            </button>
+                        {item.imagini_url && item.imagini_url.length > 0 && (
+                          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "1rem" }}>
+                            {item.imagini_url.map((imgUrl: string, idx: number) => (
+                              <div key={idx} style={{ position: "relative", width: "90px", height: "90px" }}>
+                                <img 
+                                  src={imgUrl} 
+                                  alt={`Preview ${idx + 1}`} 
+                                  style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)" }} 
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const noiImagini = item.imagini_url.filter((u: string) => u !== imgUrl);
+                                    actualizeazaElementLista<any>("portofoliu", item.id, { imagini_url: noiImagini });
+                                  }}
+                                  style={{ position: "absolute", top: "-6px", right: "-6px", background: "#ef4444", color: "white", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 4px rgba(0,0,0,0.3)" }}
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
                     )}
                   </div>
