@@ -5,11 +5,11 @@
 
 import { useRef, useState, useTransition } from "react";
 import { incarcaFisier } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 
 interface FileUploadFieldProps {
   eticheta: string;
   adminId: string;
-  // Am extins tipul pentru a accepta manual și noul bucket "portofoliu"
   bucket: "poze" | "documente" | "portofoliu" | (string & {}); 
   acceptaMultiplu?: boolean;
   tipuriAcceptate?: string; // ex: "image/*" sau ".pdf,.jpg,.png"
@@ -40,12 +40,27 @@ export default function FileUploadField({
           if (fisier.size > 10 * 1024 * 1024) {
             throw new Error(`"${fisier.name}" depășește limita de 10MB.`);
           }
-          // Forțăm tipul (as any) pentru a preveni erori dacă incarcaFisier are tipuri stricte
-          const url = await incarcaFisier(bucket as any, adminId, fisier);
-          onIncarcat(url, fisier.name);
+
+          console.log(`Încărcare fișier în bucket-ul: [${bucket}]...`);
+
+          // 1. Încercăm să folosim funcția ta existentă
+          let rezultatUrl = await incarcaFisier(bucket as any, adminId, fisier);
+
+          // 2. Dacă funcția ta returnează doar calea relativă (fără https://), o convertim la URL public complet
+          if (rezultatUrl && !rezultatUrl.startsWith("http")) {
+            const { data: publicData } = supabase.storage
+              .from(bucket)
+              .getPublicUrl(rezultatUrl);
+            
+            rezultatUrl = publicData.publicUrl;
+          }
+
+          console.log("URL generat cu succes:", rezultatUrl);
+          onIncarcat(rezultatUrl, fisier.name);
         }
-      } catch (err) {
-        setEroare(err instanceof Error ? err.message : "Încărcarea a eșuat.");
+      } catch (err: any) {
+        console.error("Eroare detaliată upload:", err);
+        setEroare(err?.message || "Încărcarea a eșuat.");
       } finally {
         if (inputRef.current) {
           inputRef.current.value = "";
@@ -58,7 +73,6 @@ export default function FileUploadField({
     <div className={`ogw-upload ${seIncarca ? "ogw-upload--loading" : ""}`}>
       <label className="ogw-field__label">{eticheta}</label>
       
-      {/* Folosim un div interactiv în loc de label imbricat pentru a preveni dublarea evenimentelor */}
       <div 
         className={`ogw-upload__zona ${seIncarca ? "is-disabled" : ""}`}
         onClick={() => !seIncarca && inputRef.current?.click()}
@@ -76,7 +90,7 @@ export default function FileUploadField({
       </div>
 
       {eroare && (
-        <p className="ogw-field__eroare" role="alert">
+        <p className="ogw-field__eroare" role="alert" style={{ color: "#ef4444", fontSize: "0.8rem", marginTop: "0.25rem" }}>
           {eroare}
         </p>
       )}
