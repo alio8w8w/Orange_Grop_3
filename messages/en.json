@@ -36,5 +36,11 @@
       "v3Label": "SUPPORT",
       "v3Detail": "Qualified and dedicated support for solving any problem."
     }
+  },
+  "Projects": {
+    "subtitle": "PORTFOLIO",
+    "heading": "My recent projects",
+    "noProjects": "No projects available at the moment.",
+    "viewWebsite": "View Website"
   }
 }

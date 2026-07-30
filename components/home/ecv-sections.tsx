@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { GraduationCap } from 'lucide-react'
-import type { TeamMember } from '@/lib/team-data'
+import type { TeamMember, Skill } from '@/lib/team-data'
 import { cn } from '@/lib/utils'
 
 export type ECVTone = 'light' | 'dark' | 'orange'
@@ -98,6 +98,12 @@ export function ECVSections({
     { value: `${stats.clients}+`, label: 'Happy Clients' },
     { value: `${stats.awards}`, label: 'Awards Won' },
   ]
+
+  // Group skills by category safely without type argument errors
+  const grouped = member.skills.reduce((acc, skill) => {
+    ;(acc[skill.category] ??= []).push(skill)
+    return acc
+  }, {} as Record<string, Skill[]>)
 
   return (
     <div className="mt-16 space-y-20">

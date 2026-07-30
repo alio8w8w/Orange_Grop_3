@@ -36,5 +36,11 @@
       "v3Label": "SUSȚINERE",
       "v3Detail": "Suport calificat și dedicat pentru rezolvarea oricărei probleme."
     }
+  },
+  "Projects": {
+    "subtitle": "PORTOFOLIU",
+    "heading": "Proiectele mele recente",
+    "noProjects": "Nu există proiecte disponibile momentan.",
+    "viewWebsite": "Vezi Website-ul"
   }
 }
