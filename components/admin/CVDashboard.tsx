@@ -53,6 +53,8 @@ export default function CVDashboard() {
 
           setRanduri(combinate);
         } else {
+          // Pentru utilizatorul curent, căutăm CV-ul propriu dar NU setăm automat adminSelectat
+          // ca să poată vedea cardul de prezentare în dashboard.
           const { data: cvProprie, error } = await supabase
             .from("cvs")
             .select("*")
@@ -62,7 +64,6 @@ export default function CVDashboard() {
           if (error) throw error;
 
           setRanduri([{ admin: profil, cv: (cvProprie as CV) ?? null }]);
-          setAdminSelectat(profilAdminId);
         }
       } catch (err) {
         setEroare(err instanceof Error ? err.message : "A apărut o eroare la încărcarea datelor.");
@@ -92,16 +93,14 @@ export default function CVDashboard() {
       const realAdminId = (rand.admin as any).admin_id;
       return (
         <div className="ogw-editor-wrapper">
-          {esteSuperadmin && (
-            <button 
-              type="button" 
-              className="ogw-btn ogw-btn--ghost ogw-back-btn" 
-              style={{ marginBottom: "1.5rem" }}
-              onClick={() => setAdminSelectat(null)}
-            >
-              ← Înapoi la toate CV-urile
-            </button>
-          )}
+          <button 
+            type="button" 
+            className="ogw-btn ogw-btn--ghost ogw-back-btn" 
+            style={{ marginBottom: "1.5rem" }}
+            onClick={() => setAdminSelectat(null)}
+          >
+            ← Înapoi la panoul de control
+          </button>
           <CVEditor
             adminId={realAdminId}
             cvInitial={rand.cv}
