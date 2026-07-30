@@ -9,8 +9,10 @@ export function SkillsView() {
   const { activeMember, members } = useTeam()
   const member = activeMember ?? members[0]
 
-  // Group skills by category safely without type argument errors
-  const grouped = member.skills.reduce((acc, skill) => {
+  // Forțăm tipul ca Skill[] pentru a preveni orice eroare de tipare implicită (any/unknown)
+  const skillsList = (member.skills || []) as Skill[]
+
+  const grouped = skillsList.reduce((acc, skill) => {
     ;(acc[skill.category] ??= []).push(skill)
     return acc
   }, {} as Record<string, Skill[]>)
@@ -56,7 +58,7 @@ export function SkillsView() {
               {category}
             </h2>
             <ul className="space-y-5">
-              {skills.map((skill) => (
+              {skills.map((skill: Skill) => (
                 <li key={skill.name}>
                   <div className="mb-1.5 flex items-baseline justify-between">
                     <span className="font-medium text-brand-white">
