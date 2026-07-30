@@ -19,38 +19,44 @@ export const supabase = createBrowserClient(
 export const STORAGE_BUCKETS = {
   poze: 'cv-poze',
   documente: 'cv-documente', // diplome + certificate
+  portofoliu: 'portofoliu',  // <--- Adăugat bucket-ul de portofoliu
 } as const
 
 /**
  * Încarcă un fișier într-un bucket și întoarce URL-ul public.
  */
 export async function incarcaFisier(
-  bucket: keyof typeof STORAGE_BUCKETS,
+  bucket: keyof typeof STORAGE_BUCKETS | string,
   adminId: string,
   fisier: File
 ): Promise<string> {
+  // Verificăm dacă bucket-ul există în obiectul de mapare, altfel folosim direct string-ul primit
+  const numeBucket = (STORAGE_BUCKETS as Record<string, string>)[bucket] || bucket;
+
   const extensie = fisier.name.split('.').pop()
   const caleFisier = `${adminId}/${crypto.randomUUID()}.${extensie}`
 
   const { error } = await supabase.storage
-    .from(STORAGE_BUCKETS[bucket])
+    .from(numeBucket)
     .upload(caleFisier, fisier, { upsert: false })
 
   if (error) throw error
 
   const { data } = supabase.storage
-    .from(STORAGE_BUCKETS[bucket])
+    .from(numeBucket)
     .getPublicUrl(caleFisier)
 
   return data.publicUrl
 }
 
 export async function stergeFisier(
-  bucket: keyof typeof STORAGE_BUCKETS,
+  bucket: keyof typeof STORAGE_BUCKETS | string,
   caleFisier: string
 ) {
+  const numeBucket = (STORAGE_BUCKETS as Record<string, string>)[bucket] || bucket;
+
   const { error } = await supabase.storage
-    .from(STORAGE_BUCKETS[bucket])
+    .from(numeBucket)
     .remove([caleFisier])
 
   if (error) throw error
