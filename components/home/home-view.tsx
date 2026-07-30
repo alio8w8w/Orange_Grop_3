@@ -17,7 +17,6 @@ export function HomeView() {
   }
 
   // Folosim "as any" pentru a rezolva conflictul de tipuri generat de TypeScript
-  // Componentele Variant vor primi datele fără ca build-ul să se oprească cu eroare.
   const memberData = activeMember as any
 
   switch (activeMember.themeVariant) {
