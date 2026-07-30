@@ -134,8 +134,11 @@
     @apply bg-background text-foreground;
   }
   
-  /* PROTECȚIE GLOBALă ABSOLUTĂ: Nicio imagine nu mai poate deveni gigantică sau să acopere ecranul */
-  img {
+  /* CORECUȚIE AICI: Restrângem regulile de imagine doar pentru anumite clase, 
+     pentru a nu strica layout-ul altor componente sau poze din Supabase */
+  .ogw-editor img,
+  .ogw-card-cv img,
+  .ogw-preview-mode img {
     max-width: 100%;
     height: auto;
     object-fit: cover;
