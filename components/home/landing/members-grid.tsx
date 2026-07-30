@@ -3,45 +3,43 @@
 import Image from 'next/image'
 import { ArrowUpRight } from 'lucide-react'
 import { useTeam } from '@/components/team-context'
+import { useTranslations } from 'next-intl'
 
 export function MembersGrid() {
   const { members, setActiveMemberId } = useTeam()
+  const t = useTranslations('Team')
 
-  // Numărul total de membrii din tabelul cvs, formatat cu 2 cifre (ex: "01", "04")
   const totalCount = String(members.length).padStart(2, '0')
 
   return (
-    <section id="members" className="relative overflow-hidden py-20 sm:py-28">
+    <section id="members" className="relative z-10 py-20 sm:py-28 bg-transparent">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-brand-orange">
-              The Collective
+              {t('subtitle')}
             </p>
             <h2 className="mt-3 font-display text-4xl font-black uppercase tracking-tight text-brand-white sm:text-5xl">
-              Meet the members
+              {t('title')}
             </h2>
           </div>
-          {/* Aici se afișează numărul real din baza de date (ex: 01 în loc de 06) */}
           <span className="hidden font-display text-6xl font-black text-brand-white/10 sm:block">
             {totalCount}
           </span>
         </div>
 
-        {/* Toți membrii sunt așezați pe o singură linie pe ecrane mari (lg:grid-cols-4) */}
         <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {members.map((m, i) => (
             <li key={m.id}>
               <button
                 type="button"
                 onClick={() => setActiveMemberId(m.id)}
-                className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-brand-white/10 bg-brand-white/[0.03] text-left transition-colors hover:border-brand-orange/60"
+                className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-brand-white/10 bg-brand-white/[0.03] backdrop-blur-sm text-left transition-colors hover:border-brand-orange/60"
               >
                 <span className="relative aspect-[4/5] w-full overflow-hidden">
                   <Image
-                    // Folosește coloana `poza_url` din Supabase
                     src={m.poza_url || '/placeholder.svg'}
-                    alt={`${m.nume} ${m.prenume}`}
+                    alt={`${m.nume || ''} ${m.prenume || ''}`}
                     fill
                     sizes="(min-width: 1024px) 25vw, (min-width: 640px) 45vw, 100vw"
                     className="object-cover grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-105"
@@ -54,11 +52,9 @@ export function MembersGrid() {
                 <span className="flex items-center justify-between gap-3 p-5">
                   <span className="min-w-0">
                     <span className="block font-display text-xs font-bold uppercase tracking-wide text-brand-orange">
-                      {/* Rolul / funcția membrului */}
                       {m.role || m.functie || 'Member'}
                     </span>
                     <span className="mt-1 block truncate font-display text-lg font-extrabold text-brand-white">
-                      {/* Folosește coloanele `nume` și `prenume` din Supabase */}
                       {m.nume} {m.prenume}
                     </span>
                   </span>

@@ -26,6 +26,7 @@ const cvGol = (adminId: string): CV => ({
   telefon: "",
   email: "",
   localitate: "",
+  functie: "", // <--- ADAUGAT: Câmp pentru funcție
   poza_url: null,
   data_nasterii: null,
   permis_conducere: [],
@@ -144,7 +145,8 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
   }
 
   function adaugaPortofoliu() {
-    const item: PortofoliuItem = { id: idNou(), titlu: "", url: "" };
+    // ADAUGAT: Inițializăm și câmpul imagine_url pentru noul proiect
+    const item: PortofoliuItem = { id: idNou(), titlu: "", url: "", imagine_url: "" };
     actualizeaza("portofoliu", [...cv.portofoliu, item]);
   }
 
@@ -184,7 +186,8 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
   }
 
   function campuriObligatoriiCompletate() {
-    return (["nume", "prenume", "telefon", "email", "localitate"] as (keyof CV)[]).every(
+    // ADAUGAT: Validăm și câmpul funcție
+    return (["nume", "prenume", "telefon", "email", "localitate", "functie"] as (keyof CV)[]).every(
       (camp) => String(cv[camp] ?? "").trim().length > 0
     );
   }
@@ -204,7 +207,6 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
     setSeSalveaza(true);
     setMesaj(null);
 
-    // Verificare corectată pe coloana admin_id din admin_profiles
     const { data: adminExistent } = await supabase
       .from("admin_profiles")
       .select("admin_id")
@@ -232,6 +234,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
       telefon: cv.telefon || null,
       email: cv.email || null,
       localitate: cv.localitate || null,
+      functie: cv.functie || null, // <--- ADAUGAT: Salvăm funcția în Supabase
       poza_url: cv.poza_url || null,
       data_nasterii: cv.data_nasterii || null,
       permis_conducere: cv.permis_conducere?.length ? cv.permis_conducere : null,
@@ -263,7 +266,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
     }
 
     setCv(data as CV);
-    localStorage.removeItem(`cv_draft_${adminId}`); // Curățăm draftul local după salvarea reușită
+    localStorage.removeItem(`cv_draft_${adminId}`);
     setMesaj({ tip: "ok", text: "CV salvat cu succes în Supabase!" });
     onSalvat?.(data as CV);
   }
@@ -284,6 +287,8 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             <div>
               <h1 style={{ fontSize: "1.75rem", fontWeight: 700 }}>{cv.nume} {cv.prenume}</h1>
               <p style={{ opacity: 0.8, fontSize: "0.9rem" }}>{cv.localitate} | {cv.telefon} | {cv.email}</p>
+              {/* Afișăm funcția în modul preview, dacă există */}
+              {cv.functie && <p style={{ color: "var(--primary)", fontWeight: 600, marginTop: "0.25rem" }}>{cv.functie}</p>}
             </div>
           </div>
 
@@ -369,6 +374,11 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             <div>
               <Eticheta text="Localitate" obligatoriu />
               <input value={cv.localitate} onChange={(e) => actualizeaza("localitate", e.target.value)} placeholder="Oraș" />
+            </div>
+            {/* ADAUGAT: Input pentru Funcție */}
+            <div>
+              <Eticheta text="Funcția (ex: Web Developer)" obligatoriu />
+              <input value={cv.functie || ""} onChange={(e) => actualizeaza("functie", e.target.value)} placeholder="Funcția vizată" />
             </div>
             <div>
               <Eticheta text="Data nașterii" />
@@ -664,7 +674,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
           <h2>Etapa 6: Portofoliu Proiecte & Diplome/Certificate</h2>
           
           <RepeatableGroup
-            titlu="Portofoliu Proiecte (Link-uri)"
+            titlu="Portofoliu Proiecte (Link-uri și Imagini)"
             elemente={cv.portofoliu}
             getId={(p) => p.id}
             onAdauga={adaugaPortofoliu}
@@ -683,6 +693,28 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
                   value={item.url}
                   onChange={(e) => actualizeazaElementLista<PortofoliuItem>("portofoliu", item.id, { url: e.target.value })}
                 />
+                
+                {/* ADAUGAT: Secțiune de încărcare a imaginii direct pentru acest proiect */}
+                <div style={{ gridColumn: "1 / -1", marginTop: "0.75rem", padding: "1rem", background: "rgba(255,255,255,0.02)", borderRadius: "8px" }}>
+                  <FileUploadField
+                    eticheta="Imagine reprezentativă proiect"
+                    adminId={adminId}
+                    bucket="portofoliu" // <--- Conectat la noul tău bucket din Supabase
+                    onIncarcat={(url) => {
+                      actualizeazaElementLista<PortofoliuItem>("portofoliu", item.id, { imagine_url: url });
+                      setSeIncarcaFisier(false);
+                    }}
+                  />
+                  {item.imagine_url && (
+                    <div style={{ marginTop: "0.75rem" }}>
+                      <img 
+                        src={item.imagine_url} 
+                        alt="Preview proiect" 
+                        style={{ width: "100%", maxWidth: "200px", height: "auto", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)" }} 
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           />

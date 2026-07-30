@@ -1,15 +1,16 @@
 "use client";
 
 // components/admin/FileUploadField.tsx
-// Camp de incarcare fisiere (poza de profil / diplome / certificate) catre Supabase Storage.
+// Camp de incarcare fisiere (poza de profil / diplome / certificate / portofoliu) catre Supabase Storage.
 
 import { useRef, useState, useTransition } from "react";
-import { incarcaFisier, STORAGE_BUCKETS } from "@/lib/supabase/client";
+import { incarcaFisier } from "@/lib/supabase/client";
 
 interface FileUploadFieldProps {
   eticheta: string;
   adminId: string;
-  bucket: keyof typeof STORAGE_BUCKETS;
+  // Am extins tipul pentru a accepta manual și noul bucket "portofoliu"
+  bucket: "poze" | "documente" | "portofoliu" | (string & {}); 
   acceptaMultiplu?: boolean;
   tipuriAcceptate?: string; // ex: "image/*" sau ".pdf,.jpg,.png"
   onIncarcat: (url: string, numeFisier: string) => void;
@@ -39,7 +40,8 @@ export default function FileUploadField({
           if (fisier.size > 10 * 1024 * 1024) {
             throw new Error(`"${fisier.name}" depășește limita de 10MB.`);
           }
-          const url = await incarcaFisier(bucket, adminId, fisier);
+          // Forțăm tipul (as any) pentru a preveni erori dacă incarcaFisier are tipuri stricte
+          const url = await incarcaFisier(bucket as any, adminId, fisier);
           onIncarcat(url, fisier.name);
         }
       } catch (err) {

@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
+import { notFound } from 'next/navigation'
 
 import '../globals.css'
 
@@ -30,20 +31,19 @@ export default async function LocaleLayout({
   const { locale } = await params
 
   // Validare limbă din URL
-  const activeLocale = routing.locales.includes(locale as any)
-    ? locale
-    : routing.defaultLocale
+  if (!routing.locales.includes(locale as any)) {
+    notFound()
+  }
 
-  // Preluarea mesajelor pentru limba respectivă
+  const activeLocale = locale
   const messages = await getMessages({ locale: activeLocale })
 
   return (
-    <html lang={activeLocale}>
-      <body className={`${inter.className} antialiased`}>
-        <NextIntlClientProvider messages={messages} locale={activeLocale}>
-          {children}
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    // Înlocuim <html> și <body> cu un container care preia fontul și atributele
+    <div className={`${inter.className} antialiased`} lang={activeLocale}>
+      <NextIntlClientProvider messages={messages} locale={activeLocale}>
+        {children}
+      </NextIntlClientProvider>
+    </div>
   )
 }

@@ -44,7 +44,7 @@ export interface PortofoliuItem {
   titlu: string;
   url: string;
   descriere?: string;
-  imagine_url?: string | null;
+  imagine_url?: string | null; // <--- Câmp adăugat pentru poza portofoliului
 }
 
 export interface DocumentAtasat {
@@ -76,6 +76,7 @@ export interface CV {
   telefon: string;
   email: string;
   localitate: string;
+  functie: string; // <--- Câmp nou adăugat
 
   // --- Date personale (optionale) ---
   poza_url?: string | null;
@@ -111,4 +112,5 @@ export const CAMPURI_OBLIGATORII: (keyof CV)[] = [
   "telefon",
   "email",
   "localitate",
+  "functie", // <--- Adăugat și aici pentru validare pe client
 ];

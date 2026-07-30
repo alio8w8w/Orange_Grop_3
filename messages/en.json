@@ -17,5 +17,24 @@
     "titleLine2": "Orange / Group 3",
     "description": "Team number 3 represents a group of highly performing candidates across various fields, consisting of dedicated professionals and experts.",
     "cta": "Meet the members"
+  },
+  "Team": {
+    "subtitle": "The Collective",
+    "title": "Meet the members"
+  },
+  "About": {
+    "subtitle": "ABOUT US",
+    "headingPart1": "A strong team formed of",
+    "headingHighlight": "specialists dedicated to your success",
+    "p1": "In our team we bring together specialists from diverse fields, ranging from public administration to IT freelancers, combining vast experience and multiple perspectives.",
+    "p2": "You can receive qualified support and successfully solve any problem by having a strong team by your side, ready to offer you the best solutions.",
+    "values": {
+      "v1Label": "EXPERIENCE",
+      "v1Detail": "Multiple perspectives and vast expertise accumulated over time.",
+      "v2Label": "QUALIFICATION",
+      "v2Detail": "Top specialists ready to achieve the desired goals.",
+      "v3Label": "SUPPORT",
+      "v3Detail": "Qualified and dedicated support for solving any problem."
+    }
   }
 }

@@ -18,8 +18,23 @@
     "description": "Echipa numărul 3 reprezintă un grup de candidați cu performanțe ridicate în diverse domenii, format din profesioniști și experți dedicați.",
     "cta": "Cunoaște membrii"
   },
-  "team": {
-    "theCollective": "Colectivul",
-    "meetTheMembers": "Faceți cunoștință cu membrii"
+  "Team": {
+    "subtitle": "Colectivul",
+    "title": "Faceți cunoștință cu membrii"
+  },
+  "About": {
+    "subtitle": "DESPRE NOI",
+    "headingPart1": "O echipă puternică formată din",
+    "headingHighlight": "specialiști dedicați succesului tău",
+    "p1": "În echipa noastră reunim specialiști din domenii diverse, de la funcții publice până la IT-freelanceri, îmbinând o experiență vastă și perspective multiple.",
+    "p2": "Poți primi o susținere calificată și poți rezolva orice problemă cu succes, având alături o echipă puternică, pregătită să îți ofere cele mai bune soluții.",
+    "values": {
+      "v1Label": "EXPERIENȚĂ",
+      "v1Detail": "Perspective multiple și expertiză vastă acumulată în timp.",
+      "v2Label": "CALIFICARE",
+      "v2Detail": "Specialiști de top pregătiți să îndeplinească obiectivele dorite.",
+      "v3Label": "SUSȚINERE",
+      "v3Detail": "Suport calificat și dedicat pentru rezolvarea oricărei probleme."
+    }
   }
 }

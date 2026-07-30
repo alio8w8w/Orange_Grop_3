@@ -1,52 +1,71 @@
-import { OrbField } from '@/components/orb-field'
-import { teamAbout } from '@/lib/team-data'
+'use client'
+
+import { useTranslations } from 'next-intl'
 
 export function AboutSection() {
+  const t = useTranslations('About')
+
   return (
     <section
       id="about"
-      className="relative overflow-hidden border-t border-brand-white/10 py-20 sm:py-28"
+      className="relative z-10 border-t border-brand-white/10 py-16 sm:py-24 lg:py-28 bg-transparent"
     >
-      <OrbField variant="mono" />
-      <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-          <div>
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-12">
+          
+          {/* Partea stângă cu efect de intro */}
+          <div className="animate-fade-in transition-all duration-700">
             <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-brand-orange">
-              About Us
+              {t('subtitle')}
             </p>
-            <h2 className="mt-4 font-display text-3xl font-black uppercase leading-[1.05] tracking-tight text-balance text-brand-white sm:text-4xl">
-              {teamAbout.heading}
+            <h2 className="mt-3 font-display text-2xl font-black uppercase leading-[1.1] tracking-tight text-brand-white sm:text-3xl lg:text-4xl">
+              {t('headingPart1')}{' '}
+              <span className="text-brand-orange">{t('headingHighlight')}</span>
             </h2>
           </div>
 
-          <div>
-            <div className="space-y-5">
-              {teamAbout.paragraphs.map((p) => (
-                <p
-                  key={p.slice(0, 24)}
-                  className="text-pretty leading-relaxed text-brand-white/70"
-                >
-                  {p}
-                </p>
-              ))}
+          {/* Partea dreaptă cu efect de intro întârziat */}
+          <div className="animate-fade-in transition-all duration-700 delay-150">
+            <div className="space-y-4 sm:space-y-5">
+              <p className="text-sm sm:text-base leading-relaxed text-brand-white/80">
+                {t('p1')}
+              </p>
+              <p className="text-sm sm:text-base leading-relaxed text-brand-white/70">
+                {t('p2')}
+              </p>
             </div>
 
-            <ul className="mt-10 grid gap-4 sm:grid-cols-3">
-              {teamAbout.values.map((v) => (
-                <li
-                  key={v.label}
-                  className="rounded-xl border border-brand-white/10 bg-brand-white/[0.03] p-5"
-                >
-                  <span className="font-display text-sm font-extrabold uppercase tracking-wide text-brand-orange">
-                    {v.label}
-                  </span>
-                  <p className="mt-2 text-sm leading-relaxed text-brand-white/60">
-                    {v.detail}
-                  </p>
-                </li>
-              ))}
+            {/* Carduri de valori */}
+            <ul className="mt-8 grid gap-4 sm:grid-cols-3 sm:mt-10">
+              <li className="rounded-xl border border-brand-white/10 bg-brand-white/[0.03] p-4 sm:p-5 backdrop-blur-sm transition-transform duration-300 hover:border-brand-orange/40 hover:-translate-y-1">
+                <span className="font-display text-xs sm:text-sm font-extrabold uppercase tracking-wide text-brand-orange">
+                  {t('values.v1Label')}
+                </span>
+                <p className="mt-2 text-xs sm:text-sm leading-relaxed text-brand-white/60">
+                  {t('values.v1Detail')}
+                </p>
+              </li>
+
+              <li className="rounded-xl border border-brand-white/10 bg-brand-white/[0.03] p-4 sm:p-5 backdrop-blur-sm transition-transform duration-300 hover:border-brand-orange/40 hover:-translate-y-1">
+                <span className="font-display text-xs sm:text-sm font-extrabold uppercase tracking-wide text-brand-orange">
+                  {t('values.v2Label')}
+                </span>
+                <p className="mt-2 text-xs sm:text-sm leading-relaxed text-brand-white/60">
+                  {t('values.v2Detail')}
+                </p>
+              </li>
+
+              <li className="rounded-xl border border-brand-white/10 bg-brand-white/[0.03] p-4 sm:p-5 backdrop-blur-sm transition-transform duration-300 hover:border-brand-orange/40 hover:-translate-y-1">
+                <span className="font-display text-xs sm:text-sm font-extrabold uppercase tracking-wide text-brand-orange">
+                  {t('values.v3Label')}
+                </span>
+                <p className="mt-2 text-xs sm:text-sm leading-relaxed text-brand-white/60">
+                  {t('values.v3Detail')}
+                </p>
+              </li>
             </ul>
           </div>
+
         </div>
       </div>
     </section>
