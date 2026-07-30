@@ -76,6 +76,22 @@ export function ProjectsSection() {
                   className="rounded-xl border border-brand-white/10 bg-brand-white/[0.03] p-6 backdrop-blur-sm flex flex-col justify-between transition-transform duration-300 hover:border-brand-orange/40 hover:-translate-y-1"
                 >
                   <div>
+                    {/* Afișare poză de copertă pentru proiecte de tip Website, dacă există */}
+                    {esteWebsite && project.imagine_url && (
+                      <a
+                        href={urlValid}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block overflow-hidden rounded-lg mb-4 border border-brand-white/10"
+                      >
+                        <img
+                          src={project.imagine_url}
+                          alt={project.titlu || 'Proiect'}
+                          className="h-40 w-full object-cover transition-transform duration-300 hover:scale-105"
+                        />
+                      </a>
+                    )}
+
                     {/* Numele proiectului */}
                     <h3 className="font-display text-lg font-bold uppercase text-brand-orange tracking-wide">
                       {project.titlu || 'Proiect fără titlu'}
