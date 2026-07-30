@@ -133,7 +133,6 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
   }
 
   function adaugaPortofoliu() {
-    // Folosim as any temporar la nivel local pentru a proteja impotriva tipurilor stricte daca nu sunt updatate
     const item = { id: idNou(), titlu: "", url: "", descriere: "", imagini_url: [] } as any;
     actualizeaza("portofoliu", [...cv.portofoliu, item]);
   }
@@ -174,7 +173,8 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
   }
 
   function campuriObligatoriiCompletate() {
-    return (["nume", "prenume", "telefon", "email", "localitate", "functie"] as (keyof CV)[]).every(
+    // Am exclus localitate, verificam doar campurile esentiale actualizate
+    return (["nume", "prenume", "telefon", "email", "functie"] as (keyof CV)[]).every(
       (camp) => String(cv[camp] ?? "").trim().length > 0
     );
   }
@@ -353,7 +353,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
               <input type="email" value={cv.email} onChange={(e) => actualizeaza("email", e.target.value)} placeholder="email@exemplu.com" />
             </div>
             <div>
-              <Eticheta text="Localitate" obligatoriu />
+              <Eticheta text="Localitate" />
               <input value={cv.localitate} onChange={(e) => actualizeaza("localitate", e.target.value)} placeholder="Oraș" />
             </div>
             <div>
@@ -556,21 +556,17 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             textButonAdauga="+ Adaugă proiect"
             gol="Niciun proiect adăugat."
             renderItem={(item: any) => {
-              // Logica pentru numararea cuvintelor din descriere
               const descriereCurenta = item.descriere || "";
               const nrCuvinte = descriereCurenta.trim().split(/\s+/).filter((w: string) => w.length > 0).length;
 
               return (
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "0.5rem" }}>
-                  
-                  {/* Titlu Proiect */}
                   <input
                     placeholder="Titlu proiect"
                     value={item.titlu}
                     onChange={(e) => actualizeazaElementLista<PortofoliuItem>("portofoliu", item.id, { titlu: e.target.value })}
                   />
 
-                  {/* Descriere Proiect (limitat la 20 cuvinte) */}
                   <div>
                     <textarea
                       rows={2}
@@ -579,7 +575,6 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
                       onChange={(e) => {
                         const text = e.target.value;
                         const words = text.trim().split(/\s+/).filter((w: string) => w.length > 0);
-                        // Permitem stergerea chiar daca e peste limita, si limitam adaugarea de noi cuvinte
                         if (words.length <= 20 || text.length < descriereCurenta.length) {
                           actualizeazaElementLista<PortofoliuItem>("portofoliu", item.id, { descriere: text } as any);
                         }
@@ -598,7 +593,6 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
                     </div>
                   </div>
 
-                  {/* Zona Mixta: Link si/sau Imagini */}
                   <div style={{ padding: "1rem", background: "rgba(255,255,255,0.02)", borderRadius: "8px", border: "1px dashed rgba(255,255,255,0.1)" }}>
                     <p style={{ margin: "0 0 0.75rem 0", fontSize: "0.85rem", opacity: 0.8 }}>
                       <strong>Prezentare proiect:</strong> Adaugă un link <strong>și/sau</strong> încarcă mai multe imagini (screenshots).
@@ -615,9 +609,8 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
                       eticheta="Încarcă imagini pentru acest proiect"
                       adminId={adminId}
                       bucket="portofoliu"
-                      acceptaMultiplu={true} // Permitem incarcarea mai multor poze odata
+                      acceptaMultiplu={true}
                       onIncarcat={(url) => {
-                        // Folosim setState callback pentru a evita race conditions cand se incarca mai multe imagini simultan
                         setCv(prevCv => {
                           const portofoliuActualizat = prevCv.portofoliu.map(p => {
                             if (p.id === item.id) {
@@ -632,7 +625,6 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
                       }}
                     />
 
-                    {/* Galerie pre-vizualizare poze adaugate */}
                     {item.imagini_url && item.imagini_url.length > 0 && (
                       <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "1rem" }}>
                         {item.imagini_url.map((imgUrl: string, idx: number) => (
@@ -657,7 +649,6 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
                       </div>
                     )}
                   </div>
-
                 </div>
               );
             }}
