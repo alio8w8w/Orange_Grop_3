@@ -9,11 +9,11 @@ export function SkillsView() {
   const { activeMember, members } = useTeam()
   const member = activeMember ?? members[0]
 
-  // Group skills by category so the consistent layout stays organized.
-  const grouped = member.skills.reduce<Record<string, Skill[]>>((acc, skill) => {
+  // Group skills by category safely without type argument errors
+  const grouped = member.skills.reduce((acc, skill) => {
     ;(acc[skill.category] ??= []).push(skill)
     return acc
-  }, {})
+  }, {} as Record<string, Skill[]>)
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
