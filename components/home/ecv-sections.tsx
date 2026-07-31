@@ -90,7 +90,10 @@ export function ECVSections({
   tone: ECVTone
 }) {
   const t = TONES[tone]
-  const { experienceStats: stats } = member
+  const m = member as any
+
+  // Setăm valori implicite pentru statistici pentru a preveni erorile de tip "undefined"
+  const stats = m.experienceStats || { years: '2', projects: '10', clients: '5', awards: '0' }
 
   const statCards = [
     { value: `${stats.years}+`, label: 'Years Experience' },
@@ -98,6 +101,10 @@ export function ECVSections({
     { value: `${stats.clients}+`, label: 'Happy Clients' },
     { value: `${stats.awards}`, label: 'Awards Won' },
   ]
+
+  const educationList = m.education || []
+  const skillsList = m.skills || []
+  const portfolioList = m.portfolioWorks || m.portfolio || []
 
   return (
     <div className="mt-16 space-y-20">
@@ -155,34 +162,38 @@ export function ECVSections({
         <SectionTitle index="02" label="Education" t={t} />
         <ol className="relative ml-2 space-y-8 border-l-2 pl-8" style={{ borderColor: 'transparent' }}>
           <span className={cn('absolute left-0 top-1 h-full w-0.5', t.line)} aria-hidden />
-          {member.education.map((edu) => (
-            <li key={edu.school} className="relative">
-              <span
-                className={cn(
-                  'absolute -left-[2.6rem] top-1 flex h-6 w-6 items-center justify-center rounded-full',
-                  t.dot,
-                )}
-                aria-hidden
-              >
-                <GraduationCap
+          {educationList.length > 0 ? (
+            educationList.map((edu: any, index: number) => (
+              <li key={edu.id || edu.school || index} className="relative">
+                <span
                   className={cn(
-                    'h-3.5 w-3.5',
-                    tone === 'orange' ? 'text-brand-orange' : 'text-brand-black',
+                    'absolute -left-[2.6rem] top-1 flex h-6 w-6 items-center justify-center rounded-full',
+                    t.dot,
                   )}
-                />
-              </span>
-              <span className={cn('font-display text-xs font-bold uppercase tracking-wide', t.eyebrow)}>
-                {edu.period}
-              </span>
-              <h3 className={cn('mt-1 font-display text-xl font-extrabold', t.heading)}>
-                {edu.school}
-              </h3>
-              <p className={cn('font-medium', t.cardText)}>{edu.degree}</p>
-              <p className={cn('mt-1 text-sm leading-relaxed', t.sub)}>
-                {edu.detail}
-              </p>
-            </li>
-          ))}
+                  aria-hidden
+                >
+                  <GraduationCap
+                    className={cn(
+                      'h-3.5 w-3.5',
+                      tone === 'orange' ? 'text-brand-orange' : 'text-brand-black',
+                    )}
+                  />
+                </span>
+                <span className={cn('font-display text-xs font-bold uppercase tracking-wide', t.eyebrow)}>
+                  {edu.period || edu.years}
+                </span>
+                <h3 className={cn('mt-1 font-display text-xl font-extrabold', t.heading)}>
+                  {edu.school || edu.institutie}
+                </h3>
+                <p className={cn('font-medium', t.cardText)}>{edu.degree}</p>
+                <p className={cn('mt-1 text-sm leading-relaxed', t.sub)}>
+                  {edu.detail || edu.description}
+                </p>
+              </li>
+            ))
+          ) : (
+            <p className={cn('text-sm', t.sub)}>Nicio informație despre educație adăugată.</p>
+          )}
         </ol>
       </section>
 
@@ -190,22 +201,30 @@ export function ECVSections({
       <section>
         <SectionTitle index="03" label="Skills" t={t} />
         <div className="grid gap-x-10 gap-y-6 sm:grid-cols-2">
-          {member.skills.map((skill) => (
-            <div key={skill.name}>
-              <div className="mb-2 flex items-baseline justify-between">
-                <span className={cn('font-medium', t.cardText)}>{skill.name}</span>
-                <span className={cn('font-display text-sm font-bold', t.sub)}>
-                  {skill.level}%
-                </span>
-              </div>
-              <div className={cn('h-2.5 w-full overflow-hidden rounded-full', t.track)}>
-                <div
-                  className="h-full rounded-full bg-brand-orange transition-all duration-700"
-                  style={{ width: `${skill.level}%` }}
-                />
-              </div>
-            </div>
-          ))}
+          {skillsList.length > 0 ? (
+            skillsList.map((skill: any, idx: number) => {
+              const skillName = typeof skill === 'string' ? skill : (skill.name || skill)
+              const skillLevel = typeof skill === 'object' && skill.level ? skill.level : 85
+              return (
+                <div key={idx}>
+                  <div className="mb-2 flex items-baseline justify-between">
+                    <span className={cn('font-medium', t.cardText)}>{skillName}</span>
+                    <span className={cn('font-display text-sm font-bold', t.sub)}>
+                      {skillLevel}%
+                    </span>
+                  </div>
+                  <div className={cn('h-2.5 w-full overflow-hidden rounded-full', t.track)}>
+                    <div
+                      className="h-full rounded-full bg-brand-orange transition-all duration-700"
+                      style={{ width: `${skillLevel}%` }}
+                    />
+                  </div>
+                </div>
+              )
+            })
+          ) : (
+            <p className={cn('text-sm', t.sub)}>Niciun skill adăugat.</p>
+          )}
         </div>
       </section>
 
@@ -213,42 +232,46 @@ export function ECVSections({
       <section>
         <SectionTitle index="04" label="Portfolio" t={t} />
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {member.portfolioWorks.map((work, i) => (
-            <article
-              key={work.id}
-              className={cn(
-                'group flex flex-col overflow-hidden rounded-2xl border transition-colors hover:border-brand-orange',
-                t.card,
-              )}
-            >
-              <div className="relative aspect-[4/3] w-full overflow-hidden">
-                <Image
-                  src={work.image || '/placeholder.svg'}
-                  alt={work.title}
-                  fill
-                  sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <span className="absolute left-3 top-3 bg-brand-black px-2 py-1 font-display text-xs font-bold text-brand-orange">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-              </div>
-              <div className="flex flex-1 flex-col p-5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-display text-xs font-bold uppercase tracking-wide text-brand-orange">
-                    {work.category}
+          {portfolioList.length > 0 ? (
+            portfolioList.map((work: any, i: number) => (
+              <article
+                key={work.id || i}
+                className={cn(
+                  'group flex flex-col overflow-hidden rounded-2xl border transition-colors hover:border-brand-orange',
+                  t.card,
+                )}
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden">
+                  <Image
+                    src={work.image || work.url || '/placeholder.svg'}
+                    alt={work.title || 'Proiect'}
+                    fill
+                    sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <span className="absolute left-3 top-3 bg-brand-black px-2 py-1 font-display text-xs font-bold text-brand-orange">
+                    {String(i + 1).padStart(2, '0')}
                   </span>
-                  <span className={cn('text-xs', t.sub)}>{work.year}</span>
                 </div>
-                <h3 className={cn('mt-2 font-display text-xl font-extrabold', t.cardText)}>
-                  {work.title}
-                </h3>
-                <p className={cn('mt-2 text-pretty text-sm leading-relaxed', t.muted)}>
-                  {work.description}
-                </p>
-              </div>
-            </article>
-          ))}
+                <div className="flex flex-1 flex-col p-5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-display text-xs font-bold uppercase tracking-wide text-brand-orange">
+                      {work.category || 'Web Design'}
+                    </span>
+                    <span className={cn('text-xs', t.sub)}>{work.year || '2026'}</span>
+                  </div>
+                  <h3 className={cn('mt-2 font-display text-xl font-extrabold', t.cardText)}>
+                    {work.title}
+                  </h3>
+                  <p className={cn('mt-2 text-pretty text-sm leading-relaxed', t.muted)}>
+                    {work.description}
+                  </p>
+                </div>
+              </article>
+            ))
+          ) : (
+            <p className={cn('text-sm', t.sub)}>Niciun proiect în portofoliu.</p>
+          )}
         </div>
       </section>
     </div>
