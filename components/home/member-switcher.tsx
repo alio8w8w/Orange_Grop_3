@@ -3,6 +3,8 @@
 import Image from 'next/image'
 import { useTeam } from '@/components/team-context'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
+import { supabase } from '@/lib/supabase/client'
 
 type Tone = 'onLight' | 'onDark' | 'onOrange'
 
@@ -33,6 +35,17 @@ const toneStyles: Record<
 export function MemberSwitcher({ tone = 'onLight' }: { tone?: Tone }) {
   const { members, activeMemberId, setActiveMemberId } = useTeam()
   const styles = toneStyles[tone]
+  const t = useTranslations('MemberSwitcher')
+
+  // Funcție de generare a URL-ului public din bucket-ul de storage Supabase (cv_poze)
+  const getPublicImageUrl = (pathOrUrl: string) => {
+    if (!pathOrUrl) return '/placeholder.svg'
+    if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
+      return pathOrUrl
+    }
+    const { data } = supabase.storage.from('cv_poze').getPublicUrl(pathOrUrl)
+    return data.publicUrl || '/placeholder.svg'
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -42,27 +55,32 @@ export function MemberSwitcher({ tone = 'onLight' }: { tone?: Tone }) {
           styles.label,
         )}
       >
-        Switch member
+        {t('switchMember')}
       </span>
       <div className="flex flex-wrap items-center gap-3">
-        {members.map((m) => {
+        {members.map((m: any) => {
           const isActive = m.id === activeMemberId
+          const firstName = m.firstName || m.prenume || ''
+          const lastName = m.lastName || m.nume || ''
+          const rawPic = m.profilePicture || m.poza_url || ''
+          const profilePic = getPublicImageUrl(rawPic)
+
           return (
             <button
               key={m.id}
               type="button"
               onClick={() => setActiveMemberId(m.id)}
-              aria-label={`View ${m.firstName} ${m.lastName}`}
+              aria-label={`${t('view')} ${firstName} ${lastName}`}
               aria-pressed={isActive}
               className={cn(
-                'relative h-12 w-12 overflow-hidden rounded-full border-2 transition-all',
+                'relative h-12 w-12 overflow-hidden rounded-full border-2 transition-all shadow-md',
                 isActive ? styles.active : styles.idle,
                 isActive && 'scale-110',
               )}
             >
               <Image
-                src={m.profilePicture || '/placeholder.svg'}
-                alt=""
+                src={profilePic}
+                alt={`${firstName} ${lastName}`}
                 fill
                 sizes="48px"
                 className="object-cover"

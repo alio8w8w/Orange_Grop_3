@@ -1,4 +1,3 @@
-// components/navbar.tsx (sau calea unde ai componenta Navbar)
 'use client'
 
 import { useEffect, useState, useTransition, useRef } from 'react'
@@ -25,10 +24,9 @@ export function Navbar() {
   const carouselRef = useRef<HTMLDivElement>(null)
   const isWheelingRef = useRef(false)
 
-  // Ordinea actualizată: Biografie este imediat după Acasă
+  // Ordinea actualizată (Fără biografie)
   const LINKS: { key: ViewKey; label: string }[] = [
     { key: 'home', label: t('home') },
-    { key: 'biography', label: t('biography') },
     { key: 'skills', label: t('skills') },
     { key: 'portfolio', label: t('portfolio') },
     { key: 'studies', label: t('studies') },

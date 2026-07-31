@@ -14,7 +14,6 @@ export function HomeView() {
     return <TeamLanding />
   }
 
-  // Folosim "as any" pentru a rezolva conflictul de tipuri generat de TypeScript
   const memberData = activeMember as any
 
   // Verificăm dacă membrul selectat este Yana (Variant3)
@@ -27,12 +26,19 @@ export function HomeView() {
     return <Variant3 member={memberData} />
   }
 
-  // Verificăm dacă membrul selectat este Ana / Ilina (Variant2)
+  // Verificăm dacă membrul selectat este Ilina -> Trimitem direct la Variant1!
+  const isIlina = 
+    memberData.nume?.toLowerCase() === 'ilina' || 
+    memberData.prenume?.toLowerCase() === 'ilina'
+
+  if (isIlina) {
+    return <Variant1 member={memberData} />
+  }
+
+  // Verificăm dacă membrul selectat este Ana (Variant2)
   const isAna = 
     memberData.nume?.toLowerCase() === 'ana' || 
-    memberData.prenume?.toLowerCase() === 'ana' ||
-    memberData.nume?.toLowerCase() === 'ilina' ||
-    memberData.prenume?.toLowerCase() === 'ilina'
+    memberData.prenume?.toLowerCase() === 'ana'
 
   if (isAna) {
     return <Variant2 member={memberData} />
@@ -49,7 +55,7 @@ export function HomeView() {
 
   switch (activeMember.themeVariant) {
     case 1:
-      return <Variant1 />
+      return <Variant1 member={memberData} />
     case 2:
       return <Variant2 member={memberData} />
     case 3:
@@ -57,6 +63,6 @@ export function HomeView() {
     case 4:
       return <Variant4 member={memberData} />
     default:
-      return <Variant1 />
+      return <Variant1 member={memberData} />
   }
 }
