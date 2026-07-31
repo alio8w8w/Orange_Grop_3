@@ -24,15 +24,11 @@ export function Navbar() {
   const carouselRef = useRef<HTMLDivElement>(null)
   const isWheelingRef = useRef(false)
 
-  // Ordinea actualizată (Fără biografie)
+  // Modificat: Doar home, skills și portfolio
   const LINKS: { key: ViewKey; label: string }[] = [
     { key: 'home', label: t('home') },
     { key: 'skills', label: t('skills') },
     { key: 'portfolio', label: t('portfolio') },
-    { key: 'studies', label: t('studies') },
-    { key: 'experience', label: t('experience') },
-    { key: 'competences', label: t('competences') },
-    { key: 'social', label: t('social') },
   ]
 
   const activeIndexRef = useRef(0)

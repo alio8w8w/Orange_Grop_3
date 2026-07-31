@@ -2,23 +2,24 @@
 
 import Image from 'next/image'
 import { ArrowLeft, Mail, Phone, Globe, MapPin } from 'lucide-react'
-import type { TeamMember } from '@/lib/team-data'
 import { useTeam } from '@/components/team-context'
 import { MemberSwitcher } from '@/components/home/member-switcher'
 import { ECVSections } from '@/components/home/ecv-sections'
 
 // Variant 1 — Predominantly WHITE with black and orange accents. Clean editorial.
-export function Variant1({ member }: { member: TeamMember }) {
+export function Variant1({ member }: { member: any }) {
   const { setActiveMemberId } = useTeam()
 
   if (!member) return null
 
-  // Preluăm în siguranță datele de contact sau folosim fallback-uri goale
+  // Preluăm în siguranță datele de contact sau fallback-urile corespunzătoare
   const contacts = member.contacts || {}
   const firstName = member.firstName || member.nume || ''
   const lastName = member.lastName || member.prenume || ''
   const role = member.role || member.functie || ''
   const profilePic = member.profilePicture || member.poza_url || '/placeholder.svg'
+  const tagline = member.tagline || member.descriere || ''
+  const bio = member.bio || member.biografie || ''
 
   return (
     <div className="bg-brand-white text-brand-black">
@@ -33,7 +34,7 @@ export function Variant1({ member }: { member: TeamMember }) {
 
         <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div className="relative">
-            <span className="absolute -left-3 -top-3 -z-0 h-full w-full rounded-lg border-4 border-brand-orange" />
+            <span className="absolute -left-3 -top-3 h-full w-full rounded-lg border-4 border-brand-orange" />
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg border-4 border-brand-black">
               <Image
                 src={profilePic}
@@ -56,10 +57,10 @@ export function Variant1({ member }: { member: TeamMember }) {
               {lastName}
             </h1>
             <p className="mt-5 max-w-md text-pretty text-lg leading-relaxed text-brand-black/70">
-              {member.tagline || member.descriere}
+              {tagline}
             </p>
             <p className="mt-3 max-w-md text-pretty leading-relaxed text-brand-black/60">
-              {member.bio || member.biografie}
+              {bio}
             </p>
 
             <ul className="mt-6 grid gap-3 sm:grid-cols-2">
