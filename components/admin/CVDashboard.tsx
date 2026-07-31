@@ -53,6 +53,8 @@ export default function CVDashboard() {
 
           setRanduri(combinate);
         } else {
+          // Pentru utilizatorul curent, căutăm CV-ul propriu dar NU setăm automat adminSelectat
+          // ca să poată vedea cardul de prezentare în dashboard.
           const { data: cvProprie, error } = await supabase
             .from("cvs")
             .select("*")
@@ -74,20 +76,14 @@ export default function CVDashboard() {
   }, [profil, esteSuperadmin]);
 
   if (seIncarca) {
-    return (
-      <div style={{ textAlign: "center", padding: "3rem 1rem", color: "white" }}>
-        <p className="ogw-loading">Se încarcă panoul...</p>
-      </div>
-    );
+    return <p className="ogw-loading" style={{ color: "white", padding: "2rem" }}>Se încarcă panoul...</p>;
   }
 
   if (eroare) {
     return (
-      <div style={{ padding: "0 1rem" }}>
-        <GlassPanel className="ogw-editor__sectiune">
-          <p className="ogw-mesaj ogw-mesaj--eroare">{eroare}</p>
-        </GlassPanel>
-      </div>
+      <GlassPanel className="ogw-editor__sectiune">
+        <p className="ogw-mesaj ogw-mesaj--eroare">{eroare}</p>
+      </GlassPanel>
     );
   }
 
@@ -96,16 +92,11 @@ export default function CVDashboard() {
     if (rand) {
       const realAdminId = (rand.admin as any).admin_id;
       return (
-        <div className="ogw-editor-wrapper" style={{ width: "100%", padding: "0.5rem" }}>
+        <div className="ogw-editor-wrapper">
           <button 
             type="button" 
             className="ogw-btn ogw-btn--ghost ogw-back-btn" 
-            style={{ 
-              marginBottom: "1.5rem", 
-              width: "100%", 
-              justifyContent: "center",
-              minHeight: "44px" // Optimizat pentru touch pe mobil
-            }} 
+            style={{ marginBottom: "1.5rem" }}
             onClick={() => setAdminSelectat(null)}
           >
             ← Înapoi la panoul de control
@@ -125,64 +116,21 @@ export default function CVDashboard() {
   }
 
   return (
-    <div 
-      className="ogw-grid ogw-grid--carduri"
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-        gap: "1rem",
-        width: "100%",
-        padding: "0.5rem"
-      }}
-    >
+    <div className="ogw-grid ogw-grid--carduri">
       {randuri.map(({ admin, cv }, i) => {
         const currentAdminId = (admin as any).admin_id;
         return (
-          <GlassPanel 
-            key={currentAdminId} 
-            className="ogw-card-cv" 
-            intarziereReveal={i * 0.05}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              textAlign: "center",
-              padding: "1.5rem 1rem",
-              width: "100%",
-              boxSizing: "border-box"
-            }}
-          >
-            <div 
-              className="ogw-card-cv__avatar"
-              style={{
-                width: "60px",
-                height: "60px",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "rgba(255, 255, 255, 0.1)",
-                fontSize: "1.5rem",
-                fontWeight: "bold",
-                marginBottom: "0.75rem"
-              }}
-            >
+          <GlassPanel key={currentAdminId} className="ogw-card-cv" intarziereReveal={i * 0.05}>
+            <div className="ogw-card-cv__avatar">
               {admin.nume_afisat?.[0]?.toUpperCase() ?? "A"}
             </div>
-            <h3 style={{ margin: "0.5rem 0", fontWeight: 600, fontSize: "1.1rem", wordBreak: "break-word" }}>
-              {admin.nume_afisat ?? "Administrator"}
-            </h3>
-            <p className="ogw-card-cv__status" style={{ opacity: 0.8, fontSize: "0.875rem", marginBottom: "1.25rem" }}>
+            <h3 style={{ margin: "0.5rem 0", fontWeight: 600 }}>{admin.nume_afisat ?? "Administrator"}</h3>
+            <p className="ogw-card-cv__status" style={{ opacity: 0.8, fontSize: "0.875rem", marginBottom: "1rem" }}>
               {cv ? `Status: ${cv.status?.replace("_", " ")}` : "Fără CV creat încă"}
             </p>
             <button 
               type="button" 
               className="ogw-btn ogw-btn--primar" 
-              style={{
-                width: "100%",
-                minHeight: "44px", // Zonă de tap generoasă pe dispozitive mobile
-                justifyContent: "center"
-              }}
               onClick={() => setAdminSelectat(currentAdminId)}
             >
               {cv ? "Deschide & editează" : "Creează CV"}
