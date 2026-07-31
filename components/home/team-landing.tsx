@@ -6,29 +6,21 @@ import { AboutSection } from '@/components/home/landing/about-section'
 import { ProjectsSection } from '@/components/home/landing/projects-section'
 import ContactFooter from '@/components/home/landing/contact-footer' 
 import { OrbField } from '@/components/orb-field'
-import { OrangesInteractiveSection } from '@/components/home/landing/OrangesInteractiveSection'
 
 export function TeamLanding() {
   return (
     <div className="bg-brand-black text-brand-white">
       <HeroSection />
 
-      {/* Container comun cu OrbField pentru fundalul fluid între MembersGrid și AboutSection */}
       <div className="relative overflow-hidden">
         <OrbField variant="mono" />
         <MembersGrid />
         <AboutSection />
       </div>
 
-      {/* Wrapper-ul interactiv gestionează portocalele care cad de la Projects și se așează jos la ContactFooter */}
-      <OrangesInteractiveSection>
-        {({ triggerOranges }) => (
-          <>
-            <ProjectsSection onCardHover={triggerOranges} />
-            <ContactFooter />
-          </>
-        )}
-      </OrangesInteractiveSection>
+      {/* Doar aceste două componente vor avea efectul de portocale */}
+      <ProjectsSection />
+      <ContactFooter />
     </div>
   )
 }

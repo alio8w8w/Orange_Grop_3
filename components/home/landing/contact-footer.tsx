@@ -1,101 +1,67 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase/client";
-import { useTranslations } from "next-intl"; 
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from 'react'
 
-interface Specialist {
-  id: string;
-  nume: string;
-  functie: string;
-  poza_url: string;
-  email: string;
+interface BaseOrange {
+  id: string
+  xPercent: number
+  size: number
+  rotation: number
+  offsetY: number
 }
 
-export default function ContactSpecialists() {
-  const t = useTranslations("Contact");
-  const [specialisti, setSpecialisti] = useState<Specialist[]>([]);
-  const [seIncarca, setSeIncarca] = useState(true);
+export default function ContactFooter() {
+  const [bottomOranges, setBottomOranges] = useState<BaseOrange[]>([])
 
   useEffect(() => {
-    async function incarcaSpecialisti() {
-      try {
-        const { data } = await supabase
-          .from("cvs")
-          .select(`
-            id,
-            admin_profiles (nume_afisat, poza_url, email),
-            functie
-          `)
-          .limit(4);
-
-        if (data) {
-          setSpecialisti(data.map((item: any) => ({
-            id: item.id,
-            nume: item.admin_profiles?.nume_afisat || "Specialist",
-            functie: item.functie || "Membru Echipă", 
-            poza_url: item.admin_profiles?.poza_url || "/images/default-avatar.png",
-            email: item.admin_profiles?.email || "hello@orangegroup3.com",
-          })));
-        }
-      } finally {
-        setSeIncarca(false);
-      }
-    }
-    incarcaSpecialisti();
-  }, []);
+    const count = 35
+    const base: BaseOrange[] = Array.from({ length: count }).map((_, i) => ({
+      id: `base-${i}`,
+      xPercent: (i / (count - 1)) * 96 + 2,
+      size: Math.floor(Math.random() * 40 + 95), // Portocale mari la bază
+      rotation: Math.random() * 360,
+      offsetY: (i % 3) * 26 + (Math.sin(i * 1.5) * 8),
+    }))
+    setBottomOranges(base)
+  }, [])
 
   return (
-    <section className="relative z-10 py-20 px-4 max-w-7xl mx-auto bg-transparent">
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
-        
-        {/* Header / Text */}
-        <div className="max-w-xl text-left">
-          <span className="text-xs font-bold tracking-widest text-brand-orange uppercase">
-            ORANGE GROUP 3
-          </span>
-          <h2 className="text-4xl font-black uppercase text-white mt-2 mb-4">
-            {t("titluSeciune")}
+    <footer className="relative w-full pt-20 pb-16 bg-brand-black text-brand-white overflow-hidden">
+      
+      {/* 🍊 MORMANUL DE PORTOCALE FIXAT LA BAZA SECȚIUNII DE CONTACT (SUB TEXT ȘI IMAGINI - z-0) */}
+      <div className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none z-0">
+        {bottomOranges.map((orange) => (
+          <img
+            key={orange.id}
+            src="/images/portocala1.png"
+            alt="Portocala jos"
+            style={{
+              position: 'absolute',
+              left: `${orange.xPercent}%`,
+              bottom: `${orange.offsetY}px`,
+              width: `${orange.size}px`,
+              height: `${orange.size}px`,
+              transform: `rotate(${orange.rotation}deg)`,
+              objectFit: 'contain',
+              zIndex: Math.floor(orange.offsetY),
+              filter: 'brightness(0.85) contrast(1.05) saturate(1.10) drop-shadow(0 14px 22px rgba(0,0,0,0.7))',
+            }}
+          />
+        ))}
+      </div>
+
+      {/* 📝 CONȚINUTUL SECȚIUNII DE CONTACT (DEASUPRA PORTOCALELOR - z-10) */}
+      <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
+        {/* Conținutul tău existent pentru Contact / Specialiști */}
+        <div className="text-center mb-12">
+          <h2 className="font-display text-2xl font-black uppercase tracking-tight sm:text-3xl lg:text-4xl">
+            Scrie unui specialist
           </h2>
-          <p className="text-white/70 text-lg">
-            {t("descriere")}
+          <p className="mt-3 text-sm sm:text-base text-brand-white/70">
+            Echipa noastră este pregătită să te ajute. Alege un specialist și scrie-i direct prin email.
           </p>
         </div>
-
-        {/* Grid Specialiști */}
-        <div className="w-full lg:w-auto">
-          {seIncarca ? (
-            <p className="text-white/50 text-center">{t("seIncarca")}</p>
-          ) : (
-            <div className="grid grid-cols-2 gap-8">
-              {specialisti.map((spec, index) => (
-                <motion.a
-                  key={spec.id}
-                  href={`mailto:${spec.email}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex flex-col items-center group text-center"
-                >
-                  <div className="relative w-36 h-36 sm:w-44 sm:h-44 mb-3 rounded-full overflow-hidden border-2 border-white/20 group-hover:border-brand-orange transition-all duration-300 shadow-2xl">
-                    <img 
-                      src={spec.poza_url} 
-                      alt={spec.nume} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                  </div>
-                  <h3 className="text-white font-bold text-lg group-hover:text-brand-orange transition-colors">
-                    {spec.nume}
-                  </h3>
-                  <p className="text-brand-orange/90 text-sm">{spec.functie}</p>
-                </motion.a>
-              ))}
-            </div>
-          )}
-        </div>
-
       </div>
-    </section>
-  );
+    </footer>
+  )
 }

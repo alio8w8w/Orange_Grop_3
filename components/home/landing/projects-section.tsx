@@ -3,47 +3,61 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@supabase/supabase-js'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-interface ProjectsSectionProps {
-  onCardHover?: (coords?: { x: number; y: number }) => void
+interface FallingOrange {
+  id: number
+  startX: number
+  startY: number
+  xOffset: number
+  size: number
+  rotation: number
+  duration: number
 }
 
-export function ProjectsSection({ onCardHover }: ProjectsSectionProps) {
+export function ProjectsSection() {
   const t = useTranslations('Projects')
   const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [activeImage, setActiveImage] = useState<string | null>(null)
   
-  // Referință pentru punctul exact de sub titlu de unde cad portocalele
+  const [fallingOranges, setFallingOranges] = useState<FallingOrange[]>([])
   const spawnRef = useRef<HTMLDivElement>(null)
 
-  const handleTrigger = () => {
-    if (spawnRef.current && onCardHover) {
-      const rect = spawnRef.current.getBoundingClientRect()
-      // Trimitem coordonatele X și Y absolute pe ecran de unde va cădea portocala
-      onCardHover({
-        x: rect.left + rect.width / 2,
-        y: rect.top + window.scrollY,
-      })
-    } else if (onCardHover) {
-      onCardHover()
-    }
+  // Funcție care declanșază căderea portocalelor sub formă de piramidă de sub titlu
+  const triggerOranges = () => {
+    if (!spawnRef.current) return
+    const rect = spawnRef.current.getBoundingClientRect()
+    const startX = rect.left + rect.width / 2
+    const startY = rect.top + window.scrollY
+
+    const newOranges: FallingOrange[] = Array.from({ length: 8 }).map((_, i) => ({
+      id: Date.now() + i + Math.random(),
+      startX,
+      startY,
+      xOffset: (Math.random() - 0.5) * 550, // Evantaj / piramidă
+      size: Math.floor(Math.random() * 40 + 95), // Portocale mari și vizibile
+      rotation: Math.random() * 360,
+      duration: Math.random() * 0.7 + 1.6,
+    }))
+
+    setFallingOranges((prev) => [...prev, ...newOranges])
+
+    setTimeout(() => {
+      setFallingOranges((prev) => prev.filter((o) => !newOranges.includes(o)))
+    }, 2400)
   }
 
   useEffect(() => {
     async function fetchProjects() {
       try {
-        const { data, error } = await supabase
-          .from('cvs')
-          .select('portofoliu')
-
+        const { data, error } = await supabase.from('cvs').select('portofoliu')
         if (error) {
           setFetchError(error.message)
         } else {
@@ -52,9 +66,7 @@ export function ProjectsSection({ onCardHover }: ProjectsSectionProps) {
             if (row.portofoliu) {
               let portofoliuData = row.portofoliu
               if (typeof portofoliuData === 'string') {
-                try {
-                  portofoliuData = JSON.parse(portofoliuData)
-                } catch (e) {}
+                try { portofoliuData = JSON.parse(portofoliuData) } catch (e) {}
               }
               if (Array.isArray(portofoliuData)) {
                 extractedProjects.push(...portofoliuData)
@@ -75,27 +87,52 @@ export function ProjectsSection({ onCardHover }: ProjectsSectionProps) {
   }, [])
 
   return (
-    <section id="projects" className="relative z-10 py-16 sm:py-24 lg:py-28 bg-transparent overflow-hidden">
+    <section id="projects" className="relative py-16 sm:py-24 lg:py-28 bg-transparent overflow-visible">
       
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes glowPulse {
-          0%, 100% { opacity: 0.15; transform: scale(1); }
-          50% { opacity: 0.4; transform: scale(1.15); }
-        }
-        .animate-glow-1 { animation: glowPulse 6s ease-in-out infinite; }
-        .animate-glow-2 { animation: glowPulse 8s ease-in-out infinite 2s; }
-        .animate-glow-3 { animation: glowPulse 7s ease-in-out infinite 4s; }
-      `}} />
-
-      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute top-10 left-10 w-72 h-72 sm:w-96 sm:h-96 bg-brand-orange/20 rounded-full blur-[100px] animate-glow-1" />
-        <div className="absolute top-1/2 -translate-y-1/2 left-4 sm:left-16 w-80 h-80 sm:w-[420px] sm:h-[420px] bg-brand-orange/15 rounded-full blur-[120px] animate-glow-2" />
-        <div className="absolute top-[45%] right-10 sm:right-24 w-72 h-72 sm:w-96 sm:h-96 bg-brand-orange/20 rounded-full blur-[110px] animate-glow-3" />
+      {/* 🍊 STRATUL DE CĂDERE (PLASAT STRICT ÎN SPATELE TEXTULUI - z-0) */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-visible">
+        <AnimatePresence>
+          {fallingOranges.map((orange) => (
+            <motion.img
+              key={orange.id}
+              src="/images/portocala1.png"
+              alt="Portocală"
+              initial={{ 
+                position: 'absolute',
+                left: orange.startX,
+                top: 40,
+                x: '-50%',
+                y: 0,
+                scale: 0.2, 
+                opacity: 0, 
+                rotate: 0 
+              }}
+              animate={{
+                x: `calc(-50% + ${orange.xOffset}px)`,
+                y: window.innerHeight * 1.2, // Cad în jos spre zona de contact
+                scale: 1,
+                opacity: [0, 1, 1, 0.95],
+                rotate: orange.rotation + 360,
+              }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: orange.duration,
+                ease: [0.25, 1, 0.5, 1],
+              }}
+              style={{
+                width: `${orange.size}px`,
+                height: `${orange.size}px`,
+                objectFit: 'contain',
+                filter: 'brightness(0.85) contrast(1.05) saturate(1.10) drop-shadow(0 12px 20px rgba(0,0,0,0.6))',
+              }}
+            />
+          ))}
+        </AnimatePresence>
       </div>
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 relative z-10">
         
-        {/* Subtitlu și Titlu */}
+        {/* Titlu și punct de lansare pentru portocale */}
         <div className="text-center mb-12 sm:mb-16">
           <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-brand-orange">
             {t('subtitle')}
@@ -103,7 +140,6 @@ export function ProjectsSection({ onCardHover }: ProjectsSectionProps) {
           <h2 className="mt-3 font-display text-2xl font-black uppercase tracking-tight text-brand-white sm:text-3xl lg:text-4xl">
             {t('heading')}
           </h2>
-          {/* Punct de referință (sub titlu, de unde pornește piramida de portocale) */}
           <div ref={spawnRef} className="w-full h-1 mt-4" />
         </div>
 
@@ -127,8 +163,8 @@ export function ProjectsSection({ onCardHover }: ProjectsSectionProps) {
               return (
                 <motion.div
                   key={project.id || idx}
-                  onMouseEnter={handleTrigger}
-                  onClick={handleTrigger}
+                  onMouseEnter={triggerOranges}
+                  onClick={triggerOranges}
                   whileHover={{ 
                     rotate: [0, -2, 2, -1, 1, 0],
                     transition: { duration: 0.4 } 
