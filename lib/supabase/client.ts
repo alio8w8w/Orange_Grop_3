@@ -9,17 +9,23 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
-// Clientul Supabase pentru browser / componente de client
-export const supabase = createBrowserClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key'
-)
+// Pattern Singleton pentru a preveni avertismentul de instanțe multiple GoTrueClient
+let cachedClient: ReturnType<typeof createBrowserClient> | null = null
+
+export const supabase = (() => {
+  if (cachedClient) return cachedClient
+  cachedClient = createBrowserClient(
+    supabaseUrl || 'https://placeholder.supabase.co',
+    supabaseAnonKey || 'placeholder-key'
+  )
+  return cachedClient
+})()
 
 // --- Bucket-uri de storage folosite în aplicație ---
 export const STORAGE_BUCKETS = {
   poze: 'cv-poze',
   documente: 'cv-documente', // diplome + certificate
-  portofoliu: 'portofoliu',  // <--- Adăugat bucket-ul de portofoliu
+  portofoliu: 'portofoliu',  // <--- Bucket-ul de portofoliu
 } as const
 
 /**
@@ -30,8 +36,7 @@ export async function incarcaFisier(
   adminId: string,
   fisier: File
 ): Promise<string> {
-  // Verificăm dacă bucket-ul există în obiectul de mapare, altfel folosim direct string-ul primit
-  const numeBucket = (STORAGE_BUCKETS as Record<string, string>)[bucket] || bucket;
+  const numeBucket = (STORAGE_BUCKETS as Record<string, string>)[bucket] || bucket
 
   const extensie = fisier.name.split('.').pop()
   const caleFisier = `${adminId}/${crypto.randomUUID()}.${extensie}`
@@ -49,11 +54,14 @@ export async function incarcaFisier(
   return data.publicUrl
 }
 
+/**
+ * Șterge un fișier din bucket.
+ */
 export async function stergeFisier(
   bucket: keyof typeof STORAGE_BUCKETS | string,
   caleFisier: string
 ) {
-  const numeBucket = (STORAGE_BUCKETS as Record<string, string>)[bucket] || bucket;
+  const numeBucket = (STORAGE_BUCKETS as Record<string, string>)[bucket] || bucket
 
   const { error } = await supabase.storage
     .from(numeBucket)

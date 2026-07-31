@@ -1,4 +1,3 @@
-// app/[locale]/layout.tsx
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
@@ -18,11 +17,10 @@ export default async function LocaleLayout({
     notFound()
   }
 
-  const activeLocale = locale
-  const messages = await getMessages({ locale: activeLocale })
+  const messages = await getMessages()
 
   return (
-    <NextIntlClientProvider messages={messages} locale={activeLocale}>
+    <NextIntlClientProvider messages={messages} locale={locale}>
       {children}
     </NextIntlClientProvider>
   )

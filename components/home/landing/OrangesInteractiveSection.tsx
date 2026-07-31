@@ -13,42 +13,49 @@ interface BaseOrange {
 
 interface FallingOrange {
   id: number
-  xOffset: number // Offset din centrul secțiunii (în pixeli)
+  startX: number
+  startY: number
+  xOffset: number
   size: number
   rotation: number
   duration: number
 }
 
 interface OrangesInteractiveSectionProps {
-  children: (props: { triggerOranges: () => void }) => React.ReactNode
+  children: (props: { triggerOranges: (coords?: { x: number; y: number }) => void }) => React.ReactNode
 }
 
 export function OrangesInteractiveSection({ children }: OrangesInteractiveSectionProps) {
   const [fallingOranges, setFallingOranges] = useState<FallingOrange[]>([])
   const [bottomOranges, setBottomOranges] = useState<BaseOrange[]>([])
 
-  // Generăm mormanul stabil de la baza paginii
+  // Generăm mormanul stabil de la baza paginii în footer
   useEffect(() => {
-    const count = 32
+    const count = 35
     const base: BaseOrange[] = Array.from({ length: count }).map((_, i) => ({
       id: `base-${i}`,
       xPercent: (i / (count - 1)) * 96 + 2,
-      size: Math.floor(Math.random() * 35 + 85), // Portocale mari la bază (85px - 120px)
+      size: Math.floor(Math.random() * 40 + 95), // Portocale foarte mari la bază
       rotation: Math.random() * 360,
-      offsetY: (i % 3) * 25 + (Math.sin(i * 1.5) * 8),
+      offsetY: (i % 3) * 26 + (Math.sin(i * 1.5) * 8),
     }))
     setBottomOranges(base)
   }, [])
 
-  // Funcție declanșată la hover pe carduri: portocalele pornesc din centru-sus (sub "Projects")
-  const triggerOranges = () => {
-    const newOranges: FallingOrange[] = Array.from({ length: 8 }).map((_, i) => ({
+  // Funcție declanșată la hover pe carduri
+  const triggerOranges = (coords?: { x: number; y: number }) => {
+    const startX = coords?.x || window.innerWidth / 2
+    const startY = coords?.y || 300
+
+    const newOranges: FallingOrange[] = Array.from({ length: 9 }).map((_, i) => ({
       id: Date.now() + i + Math.random(),
-      // Răspândire sub formă de piramidă/evantaj plecând din centru (de sub frame)
-      xOffset: (Math.random() - 0.5) * 550, 
-      size: Math.floor(Math.random() * 40 + 90), // Portocale foarte mari și vizibile (90px - 130px)
+      startX,
+      startY,
+      // Distribuție în formă de evantaj / piramidă plecând din centru
+      xOffset: (Math.random() - 0.5) * 600,
+      size: Math.floor(Math.random() * 45 + 100), // Portocale masive și extrem de vizibile (100px - 145px)
       rotation: Math.random() * 360,
-      duration: Math.random() * 0.7 + 1.6,
+      duration: Math.random() * 0.8 + 1.8,
     }))
 
     setFallingOranges((prev) => [...prev, ...newOranges])
@@ -56,66 +63,66 @@ export function OrangesInteractiveSection({ children }: OrangesInteractiveSectio
     setTimeout(() => {
       setFallingOranges((prev) => prev.filter((o) => !newOranges.includes(o)))
       
-      // Adăugăm o parte din ele la mormanul de jos
       const addedToBase: BaseOrange[] = newOranges.slice(0, 3).map((o) => ({
         id: `dropped-${o.id}`,
-        xPercent: 50 + (o.xOffset / window.innerWidth) * 100,
+        xPercent: Math.min(Math.max(((o.startX + o.xOffset) / window.innerWidth) * 100, 2), 96),
         size: o.size,
         rotation: o.rotation,
         offsetY: Math.random() * 30,
       }))
       
       setBottomOranges((prev) => [...prev.slice(addedToBase.length), ...addedToBase])
-    }, 2400)
+    }, 2600)
   }
 
   return (
     <div className="relative w-full bg-transparent">
       
-      {/* 🍊 1. FUNDALUL GLOBAL: PORTOCALELE ÎN CĂDERE (PLASATE STRICT SUB ORICE ELEMENT - z-0) */}
-      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+      {/* 🍊 1. STRATUL GLOBAL DE FUNDAL (FIXED PE ECRAN, DAR SUB ORICE ELEMENT - z-0) */}
+      {/* pointer-events-none garantează că poți da click pe orice text, imagine sau link */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         
-        {/* Container poziționat exact sub titlul secțiunii de proiecte / în centrul paginii */}
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 w-0 h-0">
-          <AnimatePresence>
-            {fallingOranges.map((orange) => (
-              <motion.img
-                key={orange.id}
-                src="/images/portocala1.png"
-                alt="Portocală"
-                initial={{ 
-                  x: 0, 
-                  y: 0, 
-                  scale: 0.3, 
-                  opacity: 0, 
-                  rotate: 0 
-                }}
-                animate={{
-                  x: orange.xOffset, // Se deschid în evantaj / piramidă pe măsură ce cad
-                  y: window.innerHeight * 0.85, // Cad până jos în pagină
-                  scale: 1,
-                  opacity: [0, 1, 1, 0.95],
-                  rotate: orange.rotation + 360,
-                }}
-                exit={{ opacity: 0 }}
-                transition={{
-                  duration: orange.duration,
-                  ease: [0.25, 1, 0.5, 1],
-                }}
-                style={{
-                  position: 'absolute',
-                  width: `${orange.size}px`,
-                  height: `${orange.size}px`,
-                  objectFit: 'contain',
-                  filter: 'brightness(0.85) contrast(1.05) saturate(1.10) drop-shadow(0 12px 20px rgba(0,0,0,0.6))',
-                }}
-              />
-            ))}
-          </AnimatePresence>
-        </div>
+        {/* Animația portocalelor în cădere */}
+        <AnimatePresence>
+          {fallingOranges.map((orange) => (
+            <motion.img
+              key={orange.id}
+              src="/images/portocala1.png"
+              alt="Portocală"
+              initial={{ 
+                position: 'fixed',
+                left: orange.startX,
+                top: orange.startY,
+                x: '-50% ',
+                y: 0,
+                scale: 0.2, 
+                opacity: 0, 
+                rotate: 0 
+              }}
+              animate={{
+                x: `calc(-50% + ${orange.xOffset}px)`,
+                y: window.innerHeight + 150, // Cad de sus până jos de tot dincolo de ecran
+                scale: 1,
+                opacity: [0, 1, 1, 0.95],
+                rotate: orange.rotation + 360,
+              }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: orange.duration,
+                ease: [0.25, 1, 0.5, 1],
+              }}
+              style={{
+                width: `${orange.size}px`,
+                height: `${orange.size}px`,
+                objectFit: 'contain',
+                filter: 'brightness(0.85) contrast(1.05) saturate(1.10) drop-shadow(0 14px 22px rgba(0,0,0,0.7))',
+              }}
+            />
+          ))}
+        </AnimatePresence>
 
-        {/* 🍊 2. PORTOCALELE FIXATE LA BAZĂ (Mormanul de jos, tot în stratul de fundal) */}
-        <div className="absolute bottom-0 left-0 right-0 h-44 pointer-events-none">
+        {/* 🍊 2. MORMANUL DE PORTOCALE FIXAT LA BAZA PAGINII (FOOTER) */}
+        <div className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none">
           {bottomOranges.map((orange) => (
             <img
               key={orange.id}
@@ -130,14 +137,14 @@ export function OrangesInteractiveSection({ children }: OrangesInteractiveSectio
                 transform: `rotate(${orange.rotation}deg)`,
                 objectFit: 'contain',
                 zIndex: Math.floor(orange.offsetY),
-                filter: 'brightness(0.85) contrast(1.05) saturate(1.10) drop-shadow(0 12px 20px rgba(0,0,0,0.6))',
+                filter: 'brightness(0.85) contrast(1.05) saturate(1.10) drop-shadow(0 14px 22px rgba(0,0,0,0.7))',
               }}
             />
           ))}
         </div>
       </div>
 
-      {/* 📝 3. CONȚINUTUL PAGINII (CARDURI, TEXT, IMAGINI) - SETat PE UN STRAT SUPERIOR (z-10) */}
+      {/* 📝 3. CONȚINUTUL PAGINII (PROJECTS & FOOTER) - PLASAT PE UN STRAT SUPERIOR (z-10) */}
       <div className="relative z-10">
         {children({ triggerOranges })}
       </div>
