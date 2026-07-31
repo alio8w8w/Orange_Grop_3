@@ -14,7 +14,6 @@ export type ViewKey =
   | 'home'
   | 'skills'
   | 'portfolio'
-  | 'biography'
   | 'studies'
   | 'experience'
   | 'competences'
