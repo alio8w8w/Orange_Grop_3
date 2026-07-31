@@ -49,5 +49,27 @@
   "seIncarca": "Loading specialists...",
   "eroare": "Could not load the team.",
   "niciunSpecialist": "No specialists registered at the moment."
-}
+},
+  "Variant1": {
+    "profileNotFound": "Ilina's profile could not be found.",
+    "backToTeam": "Back to team",
+    "defaultRole": "Full Stack Developer",
+    "heroWord1": "CODE",
+    "heroWord2": "THAT",
+    "heroWord3": "CONNECTS",
+    "im": "I'm",
+    "defaultBio": "I am a young volunteer, passionate about web development and creating impactful digital solutions.",
+    "overlay1": "Strategy",
+    "overlay2": "Code",
+    "overlay3": "Impact",
+    "skillsMissing": "Skills will be added soon.",
+    "education": "Education",
+    "educationMissing": "No education data available.",
+    "experience": "Experience",
+    "present": "Present",
+    "experienceMissing": "Professional experience will be added soon.",
+    "letsWork": "Let's work",
+    "together": "Together.",
+    "contactDesc": "Available for projects, collaborations, and discussions about technology and innovation."
+  }
 }

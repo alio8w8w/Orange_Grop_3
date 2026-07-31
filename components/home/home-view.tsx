@@ -6,8 +6,6 @@ import { Variant1 } from '@/components/home/variants/variant-1'
 import { Variant2 } from '@/components/home/variants/variant-2'
 import { Variant3 } from '@/components/home/variants/variant-3'
 import { Variant4 } from '@/components/home/variants/variant-4'
-import { Variant5 } from '@/components/home/variants/variant-5'
-import { Variant6 } from '@/components/home/variants/variant-6'
 
 export function HomeView() {
   const { activeMember } = useTeam()
@@ -28,10 +26,6 @@ export function HomeView() {
       return <Variant3 member={memberData} />
     case 4:
       return <Variant4 member={memberData} />
-    case 5:
-      return <Variant5 member={memberData} />
-    case 6:
-      return <Variant6 member={memberData} />
     default:
       return <Variant1 member={memberData} />
   }
