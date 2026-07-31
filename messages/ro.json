@@ -71,34 +71,8 @@
     "together": "Împreună.",
     "contactDesc": "Disponibilă pentru proiecte, colaborări și discuții despre tehnologie și inovație."
   },
-  "Variant1": {
-    "backToTeam": "Înapoi la echipă",
-    "profileNotFound": "Profilul nu a fost găsit",
-    "heroEyebrow": "o poveste spusă în",
-    "heroTitle": "PORTOFOLIU",
-    "chapters": {
-      "about": "Capitolul întâi",
-      "skills": "Capitolul doi",
-      "journey": "Capitolul trei",
-      "gallery": "Capitolul patru",
-      "contact": "Capitolul cinci"
-    },
-    "aboutTitle": "Cine e {nume}?",
-    "aboutSticker": "ASTA SUNT EU!",
-    "defaultBio": "O poveste încă neterminată — dar cu mult suflet pus în fiecare capitol.",
-    "birthdate": "Data nașterii",
-    "skillsTitle": "Ce știu să fac",
-    "skillsMissing": "Competențele urmează să fie adăugate.",
-    "journeyTitle": "Traseul până aici",
-    "journeyMissing": "Traseul urmează să fie completat.",
-    "present": "Prezent",
-    "licenseLabel": "Permis de conducere",
-    "categoryLabel": "Cat.",
-    "galleryTitle": "Proiecte din poveste",
-    "galleryEmpty": "Niciun proiect adăugat încă.",
-    "galleryCta": "Vezi proiectul",
-    "contactTitle": "Hai să scriem\\nurmătorul capitol",
-    "contactSubtitle": "Dacă povestea asta ți-a plăcut, hai să vorbim despre următorul proiect.",
-    "theEnd": "sfârșit… sau doar începutul."
+  "MemberSwitcher": {
+    "switchMember": "Schimbă membrul",
+    "view": "Vezi profilul lui"
   }
 }

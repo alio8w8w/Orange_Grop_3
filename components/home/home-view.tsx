@@ -17,9 +17,9 @@ export function HomeView() {
   const memberData = activeMember as any
 
   // Verificăm dacă membrul selectat este Yana (Variant3)
-  const isYana =
-    memberData.id === '7dffb2d4-60e7-43fb-b658-d5cfc9bbf8' ||
-    memberData.nume?.toLowerCase() === 'yana' ||
+  const isYana = 
+    memberData.id === '7dffb2d4-60e7-43fb-b658-d5cfc9bbf8' || 
+    memberData.nume?.toLowerCase() === 'yana' || 
     memberData.prenume?.toLowerCase() === 'yana'
 
   if (isYana) {
@@ -27,8 +27,8 @@ export function HomeView() {
   }
 
   // Verificăm dacă membrul selectat este Ilina -> Trimitem direct la Variant1!
-  const isIlina =
-    memberData.nume?.toLowerCase() === 'ilina' ||
+  const isIlina = 
+    memberData.nume?.toLowerCase() === 'ilina' || 
     memberData.prenume?.toLowerCase() === 'ilina'
 
   if (isIlina) {
@@ -36,8 +36,8 @@ export function HomeView() {
   }
 
   // Verificăm dacă membrul selectat este Ana (Variant2)
-  const isAna =
-    memberData.nume?.toLowerCase() === 'ana' ||
+  const isAna = 
+    memberData.nume?.toLowerCase() === 'ana' || 
     memberData.prenume?.toLowerCase() === 'ana'
 
   if (isAna) {
@@ -45,8 +45,8 @@ export function HomeView() {
   }
 
   // Verificăm dacă membrul selectat este Nikita (Variant4)
-  const isNikita =
-    memberData.nume?.toLowerCase() === 'nikita' ||
+  const isNikita = 
+    memberData.nume?.toLowerCase() === 'nikita' || 
     memberData.prenume?.toLowerCase() === 'nikita'
 
   if (isNikita) {
@@ -62,8 +62,6 @@ export function HomeView() {
       return <Variant3 member={memberData} />
     case 4:
       return <Variant4 member={memberData} />
-    case 5:
-      return <Variant1 member={memberData} /> // Înlocuit Variant5 cu Variant1
     default:
       return <Variant1 member={memberData} />
   }
