@@ -4,9 +4,9 @@ import { HeroSection } from '@/components/home/landing/hero-section'
 import { MembersGrid } from '@/components/home/landing/members-grid'
 import { AboutSection } from '@/components/home/landing/about-section'
 import { ProjectsSection } from '@/components/home/landing/projects-section'
-// Aici am scos acoladele {}
 import ContactFooter from '@/components/home/landing/contact-footer' 
 import { OrbField } from '@/components/orb-field'
+import { OrangesInteractiveSection } from '@/components/home/landing/OrangesInteractiveSection'
 
 export function TeamLanding() {
   return (
@@ -20,8 +20,15 @@ export function TeamLanding() {
         <AboutSection />
       </div>
 
-      <ProjectsSection />
-      <ContactFooter />
+      {/* Wrapper-ul interactiv gestionează portocalele care cad de la Projects și se așează jos la ContactFooter */}
+      <OrangesInteractiveSection>
+        {({ triggerOranges }) => (
+          <>
+            <ProjectsSection onCardHover={triggerOranges} />
+            <ContactFooter />
+          </>
+        )}
+      </OrangesInteractiveSection>
     </div>
   )
 }

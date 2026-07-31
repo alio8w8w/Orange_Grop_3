@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { Navbar } from '@/components/navbar'
 import { TeamProvider, useTeam } from '@/components/team-context'
 import { HomeView } from '@/components/home/home-view'
@@ -16,8 +17,8 @@ function CurrentView() {
 
 function Main() {
   const { view, activeMember } = useTeam()
-  // The Home landing hero sits full-screen behind the transparent navbar.
-  // Every other view needs to clear the fixed 4rem navbar.
+  // Componenta Home landing hero stă full-screen în spatele navbar-ului transparent.
+  // Orice altă vizualizare are nevoie de pt-16 pentru a evita suprapunerea cu navbar-ul fixed (4rem).
   const flush = view === 'home' && !activeMember
 
   return (

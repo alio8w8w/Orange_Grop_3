@@ -4,31 +4,55 @@
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@supabase/supabase-js'
+import { motion } from 'framer-motion'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-export function ProjectsSection() {
+interface ProjectsSectionProps {
+  onCardHover?: () => void
+}
+
+export function ProjectsSection({ onCardHover }: ProjectsSectionProps) {
   const t = useTranslations('Projects')
   const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
-
-  // Stare pentru Lightbox (fereastra plutitoare cu poze mărite)
   const [activeImage, setActiveImage] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchProjects() {
       try {
-        const { data, error } = await supabase.from('cvs').select('*')
+        const { data, error } = await supabase
+          .from('cvs')
+          .select('portofoliu')
+
         if (error) {
           console.error('Eroare Supabase:', error.message)
           setFetchError(error.message)
         } else {
-          console.log('Date primite din Supabase:', data)
-          setProjects(data || [])
+          let extractedProjects: any[] = []
+          data?.forEach((row: any) => {
+            if (row.portofoliu) {
+              let portofoliuData = row.portofoliu
+              if (typeof portofoliuData === 'string') {
+                try {
+                  portofoliuData = JSON.parse(portofoliuData)
+                } catch (e) {
+                  console.error('Eroare parsare JSON:', e)
+                }
+              }
+              if (Array.isArray(portofoliuData)) {
+                extractedProjects.push(...portofoliuData)
+              } else if (typeof portofoliuData === 'object' && portofoliuData !== null) {
+                extractedProjects.push(portofoliuData)
+              }
+            }
+          })
+
+          setProjects(extractedProjects)
         }
       } catch (err: any) {
         console.error('Eroare neașteptată:', err)
@@ -41,10 +65,40 @@ export function ProjectsSection() {
   }, [])
 
   return (
-    <section id="projects" className="relative z-10 py-16 sm:py-24 lg:py-28 bg-transparent">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section id="projects" className="relative z-10 py-16 sm:py-24 lg:py-28 bg-transparent overflow-hidden">
+      
+      {/* Stiluri CSS pentru animația de pulsare a bulelor de background */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes glowPulse {
+          0%, 100% { opacity: 0.15; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(1.15); }
+        }
+        .animate-glow-1 {
+          animation: glowPulse 6s ease-in-out infinite;
+        }
+        .animate-glow-2 {
+          animation: glowPulse 8s ease-in-out infinite 2s;
+        }
+        .animate-glow-3 {
+          animation: glowPulse 7s ease-in-out infinite 4s;
+        }
+      `}} />
+
+      {/* Bule de background care se aprind și se sting */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        {/* 1. Stânga sus */}
+        <div className="absolute top-10 left-10 w-72 h-72 sm:w-96 sm:h-96 bg-brand-orange/20 rounded-full blur-[100px] animate-glow-1" />
         
-        {/* Titlul secțiunii */}
+        {/* 2. Centru în stânga */}
+        <div className="absolute top-1/2 -translate-y-1/2 left-4 sm:left-16 w-80 h-80 sm:w-[420px] sm:h-[420px] bg-brand-orange/15 rounded-full blur-[120px] animate-glow-2" />
+        
+        {/* 3. Aproape de mijloc în partea dreaptă */}
+        <div className="absolute top-[45%] right-10 sm:right-24 w-72 h-72 sm:w-96 sm:h-96 bg-brand-orange/20 rounded-full blur-[110px] animate-glow-3" />
+      </div>
+
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 relative z-10">
+        
+        {/* Subtitlu și Titlu */}
         <div className="text-center mb-12 sm:mb-16">
           <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-brand-orange">
             {t('subtitle')}
@@ -54,71 +108,62 @@ export function ProjectsSection() {
           </h2>
         </div>
 
-        {/* Mesaje de eroare / încărcare / gol */}
+        {/* Stări de încărcare / eroare / afișare proiecte */}
         {loading ? (
           <div className="text-center text-brand-white/60 text-sm sm:text-base">
             Se încarcă proiectele...
           </div>
         ) : fetchError ? (
           <div className="text-center text-red-400 text-sm sm:text-base bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
-            Eroare la conexiunea cu baza de date: {fetchError}. Verifică politicile RLS din Supabase.
+            Eroare la conexiunea cu baza de date: {fetchError}
           </div>
         ) : !projects || projects.length === 0 ? (
           <p className="text-center text-brand-white/60 text-sm sm:text-base">
-            {t('noProjects')} (Tabelul cvs este gol sau lipsesc permisiunile RLS)
+            {t('noProjects')} (Nu s-au găsit elemente în portofoliu)
           </p>
         ) : (
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {projects.map((project, idx) => {
-              // Extragere flexibilă a câmpurilor indiferent de denumirea din baza de date
-              const projectTitle = project.title || project.nume || project.name || project.project_name
-              const projectDesc = project.description || project.descriere || project.details
-              const projectAuthor = project.author || project.autor || project.creator || project.user_name
-              const projectLink = project.link || project.url || project.website
+              const projectTitle = project.titlu || project.title || 'Proiect'
+              const projectDesc = project.descriere || project.description || 'Fără descriere disponibilă.'
               
-              // Gestionare flexibilă pentru imagini (array, string JSON sau text cu virgule)
-              let rawImages = project.images || project.poze || project.photos || project.image || []
-              if (typeof rawImages === 'string') {
-                try {
-                  rawImages = JSON.parse(rawImages)
-                } catch {
-                  rawImages = rawImages.split(',').map((s: string) => s.trim()).filter(Boolean)
-                }
-              }
-              const projectImages = Array.isArray(rawImages) ? rawImages : [rawImages].filter(Boolean)
-
-              const hasLink = Boolean(projectLink)
-              const hasImages = projectImages.length > 0
+              let rawUrl = project.url || project.link || ''
+              const projectLink = rawUrl && !rawUrl.startsWith('http') ? `https://${rawUrl}` : rawUrl
+              const imageUrl = project.imagine_url || project.image || project.poza
 
               return (
-                <div
+                <motion.div
                   key={project.id || idx}
-                  className="rounded-xl border border-brand-white/10 bg-brand-white/[0.03] p-6 backdrop-blur-sm flex flex-col justify-between transition-transform duration-300 hover:border-brand-orange/40 hover:-translate-y-1"
+                  onMouseEnter={onCardHover}
+                  onClick={onCardHover}
+                  whileHover={{ 
+                    rotate: [0, -2, 2, -1, 1, 0],
+                    transition: { duration: 0.4 } 
+                  }}
+                  className="rounded-xl border border-brand-white/10 bg-brand-white/[0.04] p-6 backdrop-blur-md flex flex-col justify-between cursor-pointer shadow-xl transition-all hover:border-brand-orange/60 hover:bg-brand-white/[0.06]"
+                  style={{ transformOrigin: 'top center' }}
                 >
                   <div>
-                    {/* Autorul proiectului */}
-                    {projectAuthor && (
-                      <span className="inline-block mb-2 text-xs font-semibold tracking-wider uppercase text-brand-orange/80">
-                        Autor: {projectAuthor}
-                      </span>
-                    )}
-
-                    {/* Numele proiectului */}
                     <h3 className="font-display text-lg font-bold uppercase text-brand-orange tracking-wide">
-                      {projectTitle || 'Proiect fără titlu'}
+                      {projectTitle}
                     </h3>
-
-                    {/* Descriere */}
                     <p className="mt-3 text-sm sm:text-base leading-relaxed text-brand-white/70">
-                      {projectDesc || 'Fără descriere disponibilă.'}
+                      {projectDesc}
                     </p>
                   </div>
 
-                  {/* Zona de acțiune: Link website sau Galerie de poze */}
-                  <div className="mt-6 pt-4 border-t border-brand-white/10">
-                    
-                    {/* Varianta 1: Link către website */}
-                    {hasLink && (
+                  <div className="mt-6 pt-4 border-t border-brand-white/10 flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
+                    {imageUrl && (
+                      <img
+                        src={imageUrl}
+                        alt={projectTitle}
+                        onClick={() => setActiveImage(imageUrl)}
+                        className="h-32 w-full object-cover rounded-lg border border-brand-white/10 cursor-pointer transition-transform duration-300 hover:scale-105 hover:border-brand-orange"
+                        title="Click pentru a mări poza"
+                      />
+                    )}
+
+                    {projectLink && (
                       <a
                         href={projectLink}
                         target="_blank"
@@ -128,25 +173,8 @@ export function ProjectsSection() {
                         {t('viewWebsite')} →
                       </a>
                     )}
-
-                    {/* Varianta 2: Portofoliu cu poze (Click deschide fereastra plutitoare) */}
-                    {hasImages && (
-                      <div className="grid grid-cols-2 gap-2 mt-2">
-                        {projectImages.map((imgUrl: string, imgIndex: number) => (
-                          <img
-                            key={imgIndex}
-                            src={imgUrl}
-                            alt={`${projectTitle || 'Proiect'} - ${imgIndex + 1}`}
-                            onClick={() => setActiveImage(imgUrl)}
-                            className="h-24 w-full object-cover rounded-lg border border-brand-white/10 cursor-pointer transition-transform duration-300 hover:scale-105 hover:border-brand-orange"
-                            title="Click pentru a mări poza"
-                          />
-                        ))}
-                      </div>
-                    )}
-
                   </div>
-                </div>
+                </motion.div>
               )
             })}
           </div>
@@ -154,7 +182,7 @@ export function ProjectsSection() {
 
       </div>
 
-      {/* Fereastra Plutitoare (Lightbox) pentru mărirea pozelor */}
+      {/* Modal vizualizare poză mărită */}
       {activeImage && (
         <div 
           className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
