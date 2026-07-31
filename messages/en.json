@@ -74,5 +74,12 @@
   "MemberSwitcher": {
     "switchMember": "Switch Member",
     "view": "View Profile"
+  },
+  "SkillsView": {
+    "skills": "Skills",
+    "studies": "Studies",
+    "experience": "Experience",
+    "competences": "Competences",
+    "social": "Social"
   }
 }

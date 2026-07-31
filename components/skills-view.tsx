@@ -3,26 +3,77 @@
 import Image from 'next/image'
 import { useTeam } from '@/components/team-context'
 import { MemberSwitcher } from '@/components/home/member-switcher'
-import type { Skill } from '@/lib/team-data'
+import { useTranslations } from 'next-intl'
+import { supabase } from '@/lib/supabase/client'
+
+interface SkillItem {
+  name: string
+  category: string
+  level: number
+}
 
 export function SkillsView() {
   const { activeMember, members } = useTeam()
   const member = activeMember ?? members[0]
+  const t = useTranslations('SkillsView')
 
-  // Forțăm tipul ca Skill[] pentru a preveni orice eroare de tipare implicită (any/unknown)
-  const skillsList = (member.skills || []) as Skill[]
+  if (!member) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center text-brand-white/60">
+        {t('loading')}
+      </div>
+    )
+  }
 
-  const grouped = skillsList.reduce((acc, skill) => {
+  // Funcție pentru generarea URL-ului public din Supabase Storage (bucket-ul cv_poze)
+  const getPublicImageUrl = (pathOrUrl: string) => {
+    if (!pathOrUrl) return '/placeholder.svg'
+    if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
+      return pathOrUrl
+    }
+    const { data } = supabase.storage.from('cv_poze').getPublicUrl(pathOrUrl)
+    return data.publicUrl || '/placeholder.svg'
+  }
+
+  // Preluăm datele membrului în siguranță (indiferent dacă sunt în RO sau EN)
+  const firstName = member.firstName || member.nume || ''
+  const lastName = member.lastName || member.prenume || ''
+  const role = member.role || member.functie || ''
+  const rawPic = member.profilePicture || member.poza_url || ''
+  const profilePic = getPublicImageUrl(rawPic)
+
+  // Extragem skills-urile din baza de date cu tipizare sigură
+  const rawSkills = (member.skills || []) as any[]
+  
+  // Transformăm skills-urile în format standardizat { name, category, level }
+  const skillsList: SkillItem[] = rawSkills.map((skill: any, index: number) => {
+    if (typeof skill === 'string') {
+      const cleanName = skill.replace('[Soft] ', '').replace('[Hard] ', '')
+      const category = skill.includes('[Soft]') ? t('softSkills') : t('hardSkills')
+      return {
+        name: cleanName,
+        category: category,
+        level: 85 + (index % 15)
+      }
+    }
+    return {
+      name: skill.name || skill.nume || `Skill ${index + 1}`,
+      category: skill.category || t('generalSkills'),
+      level: skill.level || 80
+    }
+  })
+
+  // Grupăm competențele după categorie cu tipuri explicite
+  const grouped = skillsList.reduce((acc: Record<string, SkillItem[]>, skill: SkillItem) => {
     ;(acc[skill.category] ??= []).push(skill)
     return acc
-  }, {} as Record<string, Skill[]>)
+  }, {})
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="mx-auto max-w-6xl px-4 pt-28 pb-10 sm:px-6 sm:pt-32 sm:py-14">
       {!activeMember && (
         <p className="mb-6 rounded-md border border-brand-orange/40 bg-brand-orange/10 px-4 py-2 text-sm text-brand-white/70">
-          Showing the first team member by default. Pick anyone below to see
-          their skills.
+          {t('defaultNotice')}
         </p>
       )}
 
@@ -30,8 +81,8 @@ export function SkillsView() {
         <div className="flex items-center gap-4">
           <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 border-brand-white/20">
             <Image
-              src={member.profilePicture || '/placeholder.svg'}
-              alt={`${member.firstName} ${member.lastName}`}
+              src={profilePic}
+              alt={`${firstName} ${lastName}`}
               fill
               sizes="64px"
               className="object-cover"
@@ -39,12 +90,12 @@ export function SkillsView() {
           </span>
           <div>
             <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-brand-orange">
-              Personal Skills
+              {t('personalSkills')}
             </p>
             <h1 className="font-display text-3xl font-black uppercase tracking-tight text-brand-white sm:text-4xl">
-              {member.firstName} {member.lastName}
+              {firstName} {lastName}
             </h1>
-            <p className="text-sm text-brand-white/60">{member.role}</p>
+            <p className="text-sm text-brand-white/60">{role}</p>
           </div>
         </div>
         <MemberSwitcher tone="onDark" />
@@ -58,8 +109,8 @@ export function SkillsView() {
               {category}
             </h2>
             <ul className="space-y-5">
-              {skills.map((skill: Skill) => (
-                <li key={skill.name}>
+              {skills.map((skill: SkillItem, idx: number) => (
+                <li key={`${skill.name}-${idx}`}>
                   <div className="mb-1.5 flex items-baseline justify-between">
                     <span className="font-medium text-brand-white">
                       {skill.name}

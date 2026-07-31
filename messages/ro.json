@@ -74,5 +74,13 @@
   "MemberSwitcher": {
     "switchMember": "Schimbă membrul",
     "view": "Vezi profilul lui"
+  },
+  "SkillsView": {
+    "loading": "Se încarcă datele...",
+    "defaultNotice": "Se afișează primul membru al echipei în mod implicit. Alege pe oricine de mai jos pentru a-i vedea competențele.",
+    "personalSkills": "Competențe Personale",
+    "softSkills": "Abilități Sociale / Soft Skills",
+    "hardSkills": "Competențe Tehnice / Hard Skills",
+    "generalSkills": "Competențe Generale"
   }
 }
