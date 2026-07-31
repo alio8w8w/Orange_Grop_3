@@ -39,8 +39,14 @@
   },
   "Projects": {
     "subtitle": "PORTOFOLIU",
-    "heading": "Proiectele mele recente",
+    "heading": "Proiectele noastre",
     "noProjects": "Nu există proiecte disponibile momentan.",
     "viewWebsite": "Vezi Website-ul"
+  },
+  "Contact": {
+    "titluSeciune": "Scrie unui specialist",
+    "descriere": "Echipa noastră este pregătită să te ajute. Alege un specialist și scrie-i direct prin email.",
+    "seIncarca": "Se încarcă specialiștii...",
+    "eroare": "Nu am putut încărca echipa."
   }
 }

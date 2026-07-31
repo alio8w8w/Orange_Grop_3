@@ -39,8 +39,14 @@
   },
   "Projects": {
     "subtitle": "PORTFOLIO",
-    "heading": "Ourprojects",
+    "heading": "Our Projects",
     "noProjects": "No projects available at the moment.",
     "viewWebsite": "View Website"
+  },
+  "Contact": {
+    "titluSeciune": "Write to a specialist",
+    "descriere": "Our team is ready to help you. Choose a specialist and write to them directly by email.",
+    "seIncarca": "Loading specialists...",
+    "eroare": "We could not load the team."
   }
 }

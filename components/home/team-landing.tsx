@@ -4,7 +4,8 @@ import { HeroSection } from '@/components/home/landing/hero-section'
 import { MembersGrid } from '@/components/home/landing/members-grid'
 import { AboutSection } from '@/components/home/landing/about-section'
 import { ProjectsSection } from '@/components/home/landing/projects-section'
-import { ContactFooter } from '@/components/home/landing/contact-footer'
+// Aici am scos acoladele {}
+import ContactFooter from '@/components/home/landing/contact-footer' 
 import { OrbField } from '@/components/orb-field'
 
 export function TeamLanding() {
