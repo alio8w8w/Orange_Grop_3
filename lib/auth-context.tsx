@@ -69,7 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     incarcaProfil();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+    // Corectura: Am adăugat tipurile ': string' și ': any' pentru a repara eroarea de build
+    const { data: listener } = supabase.auth.onAuthStateChange((event: string, session: any) => {
       console.log("[EVENT 🔄 Auth State Schimbat]:", event, session?.user?.email);
       incarcaProfil();
     });
