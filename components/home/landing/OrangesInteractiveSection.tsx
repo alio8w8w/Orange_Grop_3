@@ -44,7 +44,7 @@ export function OrangesInteractiveSection() {
     if (!spawnRef.current) return
     const rect = spawnRef.current.getBoundingClientRect()
     const startX = rect.left + rect.width / 2
-    const startY = rect.top + window.scrollY
+    const startY = rect.top
 
     const newOranges: FallingOrange[] = Array.from({ length: 6 }).map((_, i) => {
       const size = Math.floor(Math.random() * 35 + 95)
@@ -195,7 +195,7 @@ export function OrangesInteractiveSection() {
         </div>
       )}
 
-      {/* 🍊 PORTAL DIRECT ÎN BODY: OPREȘTE ORICE SABOTAJ DE LAYOUT */}
+      {/* 🍊 PORTAL GLOBAL DIRECT ÎN BODY */}
       {mounted && createPortal(
         <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 999999, overflow: 'hidden' }}>
           {fallingOranges.map((orange) => (
@@ -209,8 +209,10 @@ export function OrangesInteractiveSection() {
 }
 
 function PortalOrangeItem({ orange, mouseRef }: { orange: FallingOrange; mouseRef: React.MutableRefObject<{ x: number; y: number }> }) {
-  const containerRef = useRef<HTMLDivElement>(null)
+  const itemRef = useRef<HTMLDivElement>(null)
   const [hasLanded, setHasLanded] = useState(false)
+
+  const initialTranslateY = orange.startY - window.innerHeight
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -224,8 +226,8 @@ function PortalOrangeItem({ orange, mouseRef }: { orange: FallingOrange; mouseRe
 
     let animationFrameId: number
     const updatePosition = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect()
+      if (itemRef.current) {
+        const rect = itemRef.current.getBoundingClientRect()
         const centerX = rect.left + rect.width / 2
         const centerY = rect.top + rect.height / 2
 
@@ -233,18 +235,18 @@ function PortalOrangeItem({ orange, mouseRef }: { orange: FallingOrange; mouseRe
         const dy = centerY - mouseRef.current.y
         const distance = Math.sqrt(dx * dx + dy * dy)
 
-        const repelRadius = 400 // Rază mare
+        const repelRadius = 380
         let deflectX = 0
         let deflectY = 0
 
         if (distance < repelRadius && distance > 0) {
           const factor = Math.pow(1 - distance / repelRadius, 2)
-          const force = factor * 1200 // Forță magnetică brutală, ca doi magneți identici
+          const force = factor * 1100
           deflectX = (dx / distance) * force
           deflectY = (dy / distance) * force
         }
 
-        containerRef.current.style.transform = `translate(${deflectX}px, ${deflectY}px)`
+        itemRef.current.style.transform = `translate(calc(-50% + ${deflectX}px), ${deflectY}px)`
       }
       animationFrameId = requestAnimationFrame(updatePosition)
     }
@@ -254,16 +256,17 @@ function PortalOrangeItem({ orange, mouseRef }: { orange: FallingOrange; mouseRe
 
   return (
     <div
-      ref={containerRef}
+      ref={itemRef}
       style={{
         position: 'fixed',
-        left: `calc(${orange.targetX}px - 50%)`,
-        top: hasLanded ? `${window.innerHeight - orange.size}px` : `${orange.startY - window.scrollY}px`,
+        left: `${orange.targetX}px`,
+        bottom: '0px',
         width: `${orange.size}px`,
         height: `${orange.size}px`,
-        transition: hasLanded ? 'none' : 'top 1.4s cubic-bezier(0.25, 1, 0.5, 1), left 1.4s cubic-bezier(0.25, 1, 0.5, 1)',
+        transform: `translate(-50%, ${hasLanded ? '0px' : `${initialTranslateY}px`})`,
+        transition: hasLanded ? 'none' : 'transform 1.4s cubic-bezier(0.25, 1, 0.5, 1)',
         pointerEvents: 'auto',
-        willChange: 'top, transform',
+        willChange: 'transform',
       }}
     >
       <img
