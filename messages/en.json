@@ -3,7 +3,6 @@
     "home": "Home",
     "skills": "Skills",
     "portfolio": "Portfolio",
-    "biography": "Biography",
     "studies": "Studies",
     "experience": "Experience",
     "competences": "Competences",
@@ -71,5 +70,35 @@
     "letsWork": "Let's work",
     "together": "Together.",
     "contactDesc": "Available for projects, collaborations, and discussions about technology and innovation."
+  },
+   "Variant1": {
+    "backToTeam": "Back to team",
+    "profileNotFound": "Profile not found",
+    "heroEyebrow": "a story told in",
+    "heroTitle": "PORTFOLIO",
+    "chapters": {
+      "about": "Chapter One",
+      "skills": "Chapter Two",
+      "journey": "Chapter Three",
+      "gallery": "Chapter Four",
+      "contact": "Chapter Five"
+    },
+    "aboutTitle": "Who is {nume}?",
+    "aboutSticker": "THAT'S ME!",
+    "defaultBio": "A story still being written — with heart put into every chapter.",
+    "birthdate": "Birthdate",
+    "skillsTitle": "What I can do",
+    "skillsMissing": "Skills coming soon.",
+    "journeyTitle": "The journey so far",
+    "journeyMissing": "Journey coming soon.",
+    "present": "Present",
+    "licenseLabel": "Driving license",
+    "categoryLabel": "Cat.",
+    "galleryTitle": "Projects from the story",
+    "galleryEmpty": "No projects added yet.",
+    "galleryCta": "View project",
+    "contactTitle": "Let's write\\nthe next chapter",
+    "contactSubtitle": "If you liked this story, let's talk about the next project.",
+    "theEnd": "the end… or just the beginning."
   }
 }
