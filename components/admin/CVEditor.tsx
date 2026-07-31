@@ -23,7 +23,7 @@ const cvGol = (adminId: string): CV => ({
   admin_id: adminId,
   nume: "",
   prenume: "",
-  functie: "", // Adăugat pentru a rezolva erorile de tip
+  functie: "",
   telefon: "",
   email: "",
   localitate: "",
@@ -60,7 +60,6 @@ function Eticheta({ text, obligatoriu }: { text: string; obligatoriu?: boolean }
 }
 
 export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps) {
-  // Inițializare cu recuperare din localStorage pentru a preveni pierderea datelor la refresh
   const [cv, setCv] = useState<CV>(() => {
     if (cvInitial) return cvInitial;
     if (typeof window !== "undefined") {
@@ -78,7 +77,6 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
 
   const [etapaActiva, setEtapaActiva] = useState<number>(1);
 
-  // Stări pentru Skills cu slider
   const [hardSkillNou, setHardSkillNou] = useState("");
   const [nivelHard, setNivelHard] = useState<number>(3);
   const [softSkillNou, setSoftSkillNou] = useState("");
@@ -90,14 +88,12 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
   const [mesaj, setMesaj] = useState<{ tip: "ok" | "eroare"; text: string } | null>(null);
   const [modPrevizualizare, setModPrevizualizare] = useState(false);
 
-  // Autosave în localStorage la fiecare modificare a stării CV-ului
   useEffect(() => {
     if (cv && (cv.nume || cv.email)) {
       localStorage.setItem(`cv_draft_${adminId}`, JSON.stringify(cv));
     }
   }, [cv, adminId]);
 
-  // Protecție la închiderea ferestrei/reload din greșeală
   useEffect(() => {
     function handleBeforeUnload(e: BeforeUnloadEvent) {
       e.preventDefault();
@@ -229,7 +225,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
       admin_id: idValidDeSalvat,
       nume: cv.nume || null,
       prenume: cv.prenume || null,
-      functie: cv.functie || null, // Adăugat în payload
+      functie: cv.functie || null,
       telefon: cv.telefon || null,
       email: cv.email || null,
       localitate: cv.localitate || null,
@@ -354,31 +350,32 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
           <div className="ogw-grid ogw-grid--2">
             <div>
               <Eticheta text="Nume" obligatoriu />
-              <input value={cv.nume} onChange={(e) => actualizeaza("nume", e.target.value)} placeholder="Nume" />
+              <input className="ogw-input" value={cv.nume} onChange={(e) => actualizeaza("nume", e.target.value)} placeholder="Nume" />
             </div>
             <div>
               <Eticheta text="Prenume" obligatoriu />
-              <input value={cv.prenume} onChange={(e) => actualizeaza("prenume", e.target.value)} placeholder="Prenume" />
+              <input className="ogw-input" value={cv.prenume} onChange={(e) => actualizeaza("prenume", e.target.value)} placeholder="Prenume" />
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
               <Eticheta text="Funcție / Titlu Profesional (ex: Full Stack Developer)" />
-              <input value={cv.functie ?? ""} onChange={(e) => actualizeaza("functie", e.target.value)} placeholder="Funcția principală" />
+              <input className="ogw-input" value={cv.functie ?? ""} onChange={(e) => actualizeaza("functie", e.target.value)} placeholder="Funcția principală" />
             </div>
             <div>
               <Eticheta text="Număr de telefon" obligatoriu />
-              <input value={cv.telefon} onChange={(e) => actualizeaza("telefon", e.target.value)} placeholder="07xxxxxxxx" />
+              <input className="ogw-input" value={cv.telefon} onChange={(e) => actualizeaza("telefon", e.target.value)} placeholder="07xxxxxxxx" />
             </div>
             <div>
               <Eticheta text="Email" obligatoriu />
-              <input type="email" value={cv.email} onChange={(e) => actualizeaza("email", e.target.value)} placeholder="email@exemplu.com" />
+              <input className="ogw-input" type="email" value={cv.email} onChange={(e) => actualizeaza("email", e.target.value)} placeholder="email@exemplu.com" />
             </div>
             <div>
               <Eticheta text="Localitate" obligatoriu />
-              <input value={cv.localitate} onChange={(e) => actualizeaza("localitate", e.target.value)} placeholder="Oraș" />
+              <input className="ogw-input" value={cv.localitate} onChange={(e) => actualizeaza("localitate", e.target.value)} placeholder="Oraș" />
             </div>
             <div>
               <Eticheta text="Data nașterii" />
               <input
+                className="ogw-input"
                 type="date"
                 value={cv.data_nasterii ?? ""}
                 onChange={(e) => actualizeaza("data_nasterii", e.target.value)}
@@ -388,7 +385,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
 
           <div style={{ marginTop: "1rem" }}>
             <FileUploadField
-              eticheta="Fotografie de profil (cu indicator de încărcare)"
+              eticheta="Fotografie de profil"
               adminId={adminId}
               bucket="poze"
               onIncarcat={(url) => {
@@ -399,13 +396,14 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
           </div>
 
           {cv.poza_url && (
-            <img src={cv.poza_url} alt="Previzualizare" className="ogw-editor__poza-preview" style={{ marginTop: "0.5rem" }} />
+            <img src={cv.poza_url} alt="Previzualizare" className="ogw-editor__poza-preview" style={{ marginTop: "0.5rem", width: "80px", height: "80px", borderRadius: "50%", objectFit: "cover" }} />
           )}
 
           <div style={{ marginTop: "1.25rem" }}>
             <Eticheta text="Permis de conducere (categorii dedicate)" />
-            <div className="ogw-tag-input">
+            <div className="ogw-tag-input" style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
               <input
+                className="ogw-input"
                 value={permisNou}
                 onChange={(e) => setPermisNou(e.target.value)}
                 placeholder="ex: B, C"
@@ -447,17 +445,18 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
       {etapaActiva === 2 && (
         <GlassPanel className="ogw-editor__sectiune">
           <h2>Etapa 2: Prezentare & Biografie</h2>
-          <div>
+          <div style={{ marginBottom: "1rem" }}>
             <Eticheta text="Biografie" />
-            <textarea rows={3} value={cv.biografie} onChange={(e) => actualizeaza("biografie", e.target.value)} placeholder="Scrie o scurtă biografie..." />
+            <textarea className="ogw-textarea" rows={3} value={cv.biografie} onChange={(e) => actualizeaza("biografie", e.target.value)} placeholder="Scrie o scurtă biografie..." />
           </div>
-          <div>
+          <div style={{ marginBottom: "1rem" }}>
             <Eticheta text="Descriere scurtă" />
-            <textarea rows={2} value={cv.descriere} onChange={(e) => actualizeaza("descriere", e.target.value)} placeholder="Rezumat profesional..." />
+            <textarea className="ogw-textarea" rows={2} value={cv.descriere} onChange={(e) => actualizeaza("descriere", e.target.value)} placeholder="Rezumat profesional..." />
           </div>
-          <div>
+          <div style={{ marginBottom: "1rem" }}>
             <Eticheta text="Scrisoare de intenție" />
             <textarea
+              className="ogw-textarea"
               rows={4}
               value={cv.scrisoare_intentie}
               onChange={(e) => actualizeaza("scrisoare_intentie", e.target.value)}
@@ -484,18 +483,21 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             textButonAdauga="+ Adaugă studii"
             gol="Nicio instituție de studii adăugată."
             renderItem={(item) => (
-              <div className="ogw-grid ogw-grid--2" style={{ marginTop: "0.75rem" }}>
+              <div className="ogw-grid ogw-grid--2" style={{ marginTop: "0.75rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
                 <input
+                  className="ogw-input"
                   placeholder="Instituție (ex: Universitatea Tehnică)"
                   value={item.institutie}
                   onChange={(e) => actualizeazaElementLista<EducatieItem>("educatie", item.id, { institutie: e.target.value })}
                 />
                 <input
+                  className="ogw-input"
                   placeholder="Specializare / Profil"
                   value={item.specializare}
                   onChange={(e) => actualizeazaElementLista<EducatieItem>("educatie", item.id, { specializare: e.target.value })}
                 />
                 <select
+                  className="ogw-select"
                   value={item.nivel}
                   onChange={(e) => actualizeazaElementLista<EducatieItem>("educatie", item.id, { nivel: e.target.value as EducatieItem["nivel"] })}
                 >
@@ -507,6 +509,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
                   <option value="certificare">Certificare</option>
                 </select>
                 <input
+                  className="ogw-input"
                   type="month"
                   value={item.data_inceput}
                   onChange={(e) => actualizeazaElementLista<EducatieItem>("educatie", item.id, { data_inceput: e.target.value })}
@@ -534,23 +537,27 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             textButonAdauga="+ Adaugă experiență"
             gol="Nicio experiență profesională adăugată."
             renderItem={(item) => (
-              <div className="ogw-grid ogw-grid--2" style={{ marginTop: "0.75rem" }}>
+              <div className="ogw-grid ogw-grid--2" style={{ marginTop: "0.75rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
                 <input
+                  className="ogw-input"
                   placeholder="Companie"
                   value={item.companie}
                   onChange={(e) => actualizeazaElementLista<ExperientaItem>("experienta", item.id, { companie: e.target.value })}
                 />
                 <input
+                  className="ogw-input"
                   placeholder="Funcție / Post"
                   value={item.functie}
                   onChange={(e) => actualizeazaElementLista<ExperientaItem>("experienta", item.id, { functie: e.target.value })}
                 />
                 <input
+                  className="ogw-input"
                   type="month"
                   value={item.data_inceput}
                   onChange={(e) => actualizeazaElementLista<ExperientaItem>("experienta", item.id, { data_inceput: e.target.value })}
                 />
                 <input
+                  className="ogw-input"
                   type="month"
                   value={item.data_sfarsit ?? ""}
                   placeholder="Prezent"
@@ -575,6 +582,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             <Eticheta text="Hard Skills (Abilități Tehnice) + Slider Nivel" />
             <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
               <input
+                className="ogw-input"
                 value={hardSkillNou}
                 onChange={(e) => setHardSkillNou(e.target.value)}
                 placeholder="ex: React, JavaScript, SQL..."
@@ -599,6 +607,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             <Eticheta text="Soft Skills (Abilități Personale) + Slider Nivel" />
             <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
               <input
+                className="ogw-input"
                 value={softSkillNou}
                 onChange={(e) => setSoftSkillNou(e.target.value)}
                 placeholder="ex: Comunicare, Lucru în echipă..."
@@ -638,13 +647,15 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
               textButonAdauga="+ Adaugă limbă"
               gol="Nicio limbă străină adăugată."
               renderItem={(item) => (
-                <div className="ogw-grid ogw-grid--2" style={{ marginTop: "0.5rem" }}>
+                <div className="ogw-grid ogw-grid--2" style={{ marginTop: "0.5rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
                   <input
+                    className="ogw-input"
                     placeholder="Limbă (ex: Engleză)"
                     value={item.limba}
                     onChange={(e) => actualizeazaElementLista<LimbaItem>("limbi", item.id, { limba: e.target.value })}
                   />
                   <select
+                    className="ogw-select"
                     value={item.nivel}
                     onChange={(e) => actualizeazaElementLista<LimbaItem>("limbi", item.id, { nivel: e.target.value as LimbaItem["nivel"] })}
                   >
@@ -678,13 +689,15 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             textButonAdauga="+ Adaugă proiect"
             gol="Niciun proiect adăugat."
             renderItem={(item) => (
-              <div className="ogw-grid ogw-grid--2" style={{ marginTop: "0.5rem" }}>
+              <div className="ogw-grid ogw-grid--2" style={{ marginTop: "0.5rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
                 <input
+                  className="ogw-input"
                   placeholder="Titlu proiect"
                   value={item.titlu}
                   onChange={(e) => actualizeazaElementLista<PortofoliuItem>("portofoliu", item.id, { titlu: e.target.value })}
                 />
                 <input
+                  className="ogw-input"
                   placeholder="Link (URL)"
                   value={item.url}
                   onChange={(e) => actualizeazaElementLista<PortofoliuItem>("portofoliu", item.id, { url: e.target.value })}
@@ -695,7 +708,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
 
           <div style={{ marginTop: "1.5rem", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "1rem" }}>
             <FileUploadField
-              eticheta="Încarcă Diplome / Certificate (Secțiune separată de portofoliu)"
+              eticheta="Încarcă Diplome / Certificate"
               adminId={adminId}
               bucket="documente"
               acceptaMultiplu
@@ -708,7 +721,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
                 setSeIncarcaFisier(false);
               }}
             />
-            <ul className="ogw-doc-list" style={{ marginTop: "0.5rem" }}>
+            <ul className="ogw-doc-list" style={{ marginTop: "0.5rem", listStyle: "none", padding: 0 }}>
               {cv.documente.map((doc) => (
                 <li key={doc.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.3rem 0" }}>
                   <a href={doc.url} target="_blank" rel="noreferrer" style={{ color: "var(--primary)" }}>📄 {doc.nume_fisier}</a>
@@ -735,11 +748,12 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
       {etapaActiva === 7 && (
         <GlassPanel className="ogw-editor__sectiune">
           <h2>Etapa 7: Rețele Sociale & Finalizare</h2>
-          <div className="ogw-grid ogw-grid--2" style={{ marginBottom: "1rem" }}>
+          <div className="ogw-grid ogw-grid--2" style={{ marginBottom: "1rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             {(["facebook", "instagram", "linkedin", "tiktok"] as const).map((retea) => (
               <div key={retea}>
                 <Eticheta text={retea[0].toUpperCase() + retea.slice(1)} />
                 <input
+                  className="ogw-input"
                   placeholder="https://..."
                   value={cv.social_links[retea] ?? ""}
                   onChange={(e) =>
@@ -752,7 +766,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
 
           <div style={{ marginBottom: "1.5rem" }}>
             <Eticheta text="Status CV" />
-            <select value={cv.status} onChange={(e) => actualizeaza("status", e.target.value as CV["status"])}>
+            <select className="ogw-select" value={cv.status} onChange={(e) => actualizeaza("status", e.target.value as CV["status"])}>
               <option value="ciorna">Ciornă</option>
               <option value="in_lucru">În lucru</option>
               <option value="complet">Complet</option>
