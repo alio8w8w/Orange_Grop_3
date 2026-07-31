@@ -156,7 +156,6 @@
   color: inherit; 
 }
 
-/* Mobile First (Cum arată pe ecrane mici) */
 .ogw-shell { 
   display: flex; 
   flex-direction: column; 
@@ -201,7 +200,6 @@
   box-sizing: border-box; 
 }
 
-/* Desktop (Cum arată pe tablete mari și monitoare) */
 @media (min-width: 768px) {
   .ogw-shell {
     flex-direction: row; 
