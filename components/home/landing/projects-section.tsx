@@ -29,6 +29,16 @@ export function ProjectsSection() {
   
   const [fallingOranges, setFallingOranges] = useState<FallingOrange[]>([])
   const spawnRef = useRef<HTMLDivElement>(null)
+  const mouseRef = useRef<{ x: number; y: number }>({ x: -1000, y: -1000 })
+
+  // Urmărim poziția mouse-ului pe ecran pentru ca portocalele să se ferească rapid
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY }
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
 
   // Funcție care declanșază căderea portocalelor sub formă de piramidă de sub titlu
   const triggerOranges = () => {
@@ -37,21 +47,21 @@ export function ProjectsSection() {
     const startX = rect.left + rect.width / 2
     const startY = rect.top + window.scrollY
 
-    const newOranges: FallingOrange[] = Array.from({ length: 8 }).map((_, i) => ({
+    const newOranges: FallingOrange[] = Array.from({ length: 9 }).map((_, i) => ({
       id: Date.now() + i + Math.random(),
       startX,
       startY,
-      xOffset: (Math.random() - 0.5) * 550, // Evantaj / piramidă
-      size: Math.floor(Math.random() * 40 + 95), // Portocale mari și vizibile
+      xOffset: (Math.random() - 0.5) * 600, // Evantaj / piramidă
+      size: Math.floor(Math.random() * 45 + 100), // Portocale mari și vizibile
       rotation: Math.random() * 360,
-      duration: Math.random() * 0.7 + 1.6,
+      duration: Math.random() * 0.8 + 1.8,
     }))
 
     setFallingOranges((prev) => [...prev, ...newOranges])
 
     setTimeout(() => {
       setFallingOranges((prev) => prev.filter((o) => !newOranges.includes(o)))
-    }, 2400)
+    }, 2800)
   }
 
   useEffect(() => {
@@ -87,70 +97,57 @@ export function ProjectsSection() {
   }, [])
 
   return (
-    <section id="projects" className="relative py-16 sm:py-24 lg:py-28 bg-transparent overflow-visible">
+    <section id="projects" className="relative py-20 sm:py-28 lg:py-32 bg-transparent overflow-visible">
       
-      {/* 🍊 STRATUL DE CĂDERE (PLASAT STRICT ÎN SPATELE TEXTULUI - z-0) */}
+      {/* Stiluri CSS pentru animația de pulsare a bulelor de background */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes glowPulse {
+          0%, 100% { opacity: 0.2; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        .animate-glow-1 { animation: glowPulse 5s ease-in-out infinite; }
+        .animate-glow-2 { animation: glowPulse 7s ease-in-out infinite 1.5s; }
+        .animate-glow-3 { animation: glowPulse 6s ease-in-out infinite 3s; }
+      `}} />
+
+      {/* Buline / Bule luminoase care se sting și se aprind pe background (elimină aspectul trist) */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute top-12 left-8 w-80 h-80 sm:w-[450px] sm:h-[450px] bg-brand-orange/25 rounded-full blur-[120px] animate-glow-1" />
+        <div className="absolute top-1/2 -translate-y-1/2 right-10 w-96 h-96 sm:w-[500px] sm:h-[500px] bg-brand-orange/20 rounded-full blur-[140px] animate-glow-2" />
+        <div className="absolute bottom-10 left-1/3 w-80 h-80 sm:w-[400px] sm:h-[400px] bg-brand-orange/15 rounded-full blur-[110px] animate-glow-3" />
+      </div>
+
+      {/* 🍊 STRATUL DE CĂDERE A PORTOCALELOR (CU EVITARE DE MOUSE) */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-visible">
         <AnimatePresence>
           {fallingOranges.map((orange) => (
-            <motion.img
-              key={orange.id}
-              src="/images/portocala1.png"
-              alt="Portocală"
-              initial={{ 
-                position: 'absolute',
-                left: orange.startX,
-                top: 40,
-                x: '-50%',
-                y: 0,
-                scale: 0.2, 
-                opacity: 0, 
-                rotate: 0 
-              }}
-              animate={{
-                x: `calc(-50% + ${orange.xOffset}px)`,
-                y: window.innerHeight * 1.2, // Cad în jos spre zona de contact
-                scale: 1,
-                opacity: [0, 1, 1, 0.95],
-                rotate: orange.rotation + 360,
-              }}
-              exit={{ opacity: 0 }}
-              transition={{
-                duration: orange.duration,
-                ease: [0.25, 1, 0.5, 1],
-              }}
-              style={{
-                width: `${orange.size}px`,
-                height: `${orange.size}px`,
-                objectFit: 'contain',
-                filter: 'brightness(0.85) contrast(1.05) saturate(1.10) drop-shadow(0 12px 20px rgba(0,0,0,0.6))',
-              }}
-            />
+            <FallingOrangeItem key={orange.id} orange={orange} mouseRef={mouseRef} />
           ))}
         </AnimatePresence>
       </div>
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 relative z-10">
         
-        {/* Titlu și punct de lansare pentru portocale */}
-        <div className="text-center mb-12 sm:mb-16">
-          <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-brand-orange">
+        {/* Titlu mărit, cu "Proiectele" (alb) și "Noastre" (portocaliu) */}
+        <div className="text-center mb-16 sm:mb-20">
+          <p className="font-display text-xs sm:text-sm font-bold uppercase tracking-[0.35em] text-brand-orange mb-3">
             {t('subtitle')}
           </p>
-          <h2 className="mt-3 font-display text-2xl font-black uppercase tracking-tight text-brand-white sm:text-3xl lg:text-4xl">
-            {t('heading')}
+          <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight">
+            <span className="text-brand-white">Proiectele </span>
+            <span className="text-brand-orange drop-shadow-[0_0_25px_rgba(255,107,0,0.5)]">Noastre</span>
           </h2>
-          <div ref={spawnRef} className="w-full h-1 mt-4" />
+          <div ref={spawnRef} className="w-full h-1 mt-6" />
         </div>
 
         {loading ? (
-          <div className="text-center text-brand-white/60 text-sm">Se încarcă proiectele...</div>
+          <div className="text-center text-brand-white/60 text-base">Se încarcă proiectele...</div>
         ) : fetchError ? (
           <div className="text-center text-red-400 text-sm bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
             Eroare: {fetchError}
           </div>
         ) : !projects || projects.length === 0 ? (
-          <p className="text-center text-brand-white/60 text-sm">{t('noProjects')}</p>
+          <p className="text-center text-brand-white/60 text-base">{t('noProjects')}</p>
         ) : (
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {projects.map((project, idx) => {
@@ -217,5 +214,77 @@ export function ProjectsSection() {
         </div>
       )}
     </section>
+  )
+}
+
+// Subcomponentă care gestionează mișcarea portocalei și o ferește rapid când cursorul se apropie
+function FallingOrangeItem({ orange, mouseRef }: { orange: FallingOrange; mouseRef: React.MutableRefObject<{ x: number; y: number }> }) {
+  const [deflectX, setDeflectX] = useState(0)
+  const [deflectY, setDeflectY] = useState(0)
+  const itemRef = useRef<HTMLImageElement>(null)
+
+  useEffect(() => {
+    let animationFrameId: number
+    const updatePosition = () => {
+      if (itemRef.current) {
+        const rect = itemRef.current.getBoundingClientRect()
+        const orangeCenterX = rect.left + rect.width / 2
+        const orangeCenterY = rect.top + rect.height / 2
+
+        const dx = orangeCenterX - mouseRef.current.x
+        const dy = orangeCenterY - mouseRef.current.y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+
+        // Dacă mouse-ul se apropie, portocala se dă rapid la o parte
+        const repelRadius = 180
+        if (distance < repelRadius && distance > 0) {
+          const force = (1 - distance / repelRadius) * 130
+          setDeflectX((dx / distance) * force)
+          setDeflectY((dy / distance) * force)
+        } else {
+          setDeflectX(0)
+          setDeflectY(0)
+        }
+      }
+      animationFrameId = requestAnimationFrame(updatePosition)
+    }
+    animationFrameId = requestAnimationFrame(updatePosition)
+    return () => cancelAnimationFrame(animationFrameId)
+  }, [mouseRef])
+
+  return (
+    <motion.img
+      ref={itemRef}
+      src="/images/portocala1.png"
+      alt="Portocală"
+      initial={{ 
+        position: 'absolute',
+        left: orange.startX,
+        top: 40,
+        x: '-50%',
+        y: 0,
+        scale: 0.2, 
+        opacity: 0, 
+        rotate: 0 
+      }}
+      animate={{
+        x: `calc(-50% + ${orange.xOffset + deflectX}px)`,
+        y: window.innerHeight * 1.2 + deflectY,
+        scale: 1,
+        opacity: [0, 1, 1, 0.95],
+        rotate: orange.rotation + 360,
+      }}
+      exit={{ opacity: 0 }}
+      transition={{
+        duration: orange.duration,
+        ease: [0.25, 1, 0.5, 1],
+      }}
+      style={{
+        width: `${orange.size}px`,
+        height: `${orange.size}px`,
+        objectFit: 'contain',
+        filter: 'brightness(0.85) contrast(1.05) saturate(1.10) drop-shadow(0 12px 20px rgba(0,0,0,0.6))',
+      }}
+    />
   )
 }

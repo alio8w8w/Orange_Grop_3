@@ -1,3 +1,4 @@
+// components/navbar.tsx (sau calea unde ai componenta Navbar)
 'use client'
 
 import { useEffect, useState, useTransition, useRef } from 'react'
@@ -24,11 +25,12 @@ export function Navbar() {
   const carouselRef = useRef<HTMLDivElement>(null)
   const isWheelingRef = useRef(false)
 
+  // Ordinea actualizată: Biografie este imediat după Acasă
   const LINKS: { key: ViewKey; label: string }[] = [
     { key: 'home', label: t('home') },
+    { key: 'biography', label: t('biography') },
     { key: 'skills', label: t('skills') },
     { key: 'portfolio', label: t('portfolio') },
-    { key: 'biography', label: t('biography') },
     { key: 'studies', label: t('studies') },
     { key: 'experience', label: t('experience') },
     { key: 'competences', label: t('competences') },
@@ -123,23 +125,19 @@ export function Navbar() {
     }
   }, [LINKS.length])
 
-  // >>> FUNCȚIA DE SCHIMBARE A LIMBII CORECTATĂ <<<
+  // Funcția de schimbare a limbii
   const toggleLanguage = (newLocale: string) => {
     if (newLocale === currentLocale) return
 
-    // 1. Setăm cookie-ul explicit pentru next-intl
     document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`
 
     startTransition(() => {
-      // Dacă folosești rute dinamice cu prefix de limbă (ex: /ro/despre -> /en/despre)
-      // poți înlocui segmentul de limbă din pathname:
       const segments = pathname.split('/')
       if (segments[1] === 'ro' || segments[1] === 'en') {
         segments[1] = newLocale
         const newPathname = segments.join('/')
         router.push(newPathname)
       } else {
-        // Dacă folosești doar cookie-uri fără prefix în URL
         router.refresh()
       }
     })

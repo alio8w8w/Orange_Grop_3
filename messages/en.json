@@ -43,10 +43,11 @@
     "noProjects": "No projects available at the moment.",
     "viewWebsite": "View Website"
   },
-  "Contact": {
-    "titluSeciune": "Write to a specialist",
-    "descriere": "Our team is ready to help you. Choose a specialist and write to them directly by email.",
-    "seIncarca": "Loading specialists...",
-    "eroare": "We could not load the team."
-  }
+ "Contact": {
+  "titluSeciune": "Write to a specialist",
+  "descriere": "Our team is ready to help you. Choose a specialist and write to them directly via email.",
+  "seIncarca": "Loading specialists...",
+  "eroare": "Could not load the team.",
+  "niciunSpecialist": "No specialists registered at the moment."
+}
 }
