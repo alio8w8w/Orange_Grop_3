@@ -131,7 +131,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
   }
 
   function adaugaPortofoliu() {
-    const item = { id: idNou(), titlu: "", tip_proiect: "website", url: "", imagine_url: null, descriere: "", imagini_url: [] } as any;
+    const item = { id: idNou(), titlu: "", tip_proiect: "website", url: "", descriere: "", imagini_url: [] } as any;
     actualizeaza("portofoliu", [...cv.portofoliu, item]);
   }
 
@@ -621,43 +621,15 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
                   {/* AFIȘARE DINAMICĂ ÎN FUNCȚIE DE TUMBLER */}
                   <div style={{ padding: "1rem", background: "rgba(255,255,255,0.02)", borderRadius: "8px", border: "1px dashed rgba(255,255,255,0.1)" }}>
                     {tipProiect === "website" ? (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                        <p style={{ margin: "0", fontSize: "0.85rem", opacity: 0.8 }}>
-                          <strong>Link Website & Imagine Prezentare:</strong> Adaugă link-ul și o poză reprezentativă.
+                      <div>
+                        <p style={{ margin: "0 0 0.5rem 0", fontSize: "0.85rem", opacity: 0.8 }}>
+                          <strong>Link Website:</strong> Adaugă adresa URL unde poate fi accesat proiectul.
                         </p>
                         <input
-                          placeholder="Link (ex: https://inteligentservice.md)"
+                          placeholder="Link (ex: https://github.com/... sau URL live)"
                           value={item.url || ""}
                           onChange={(e) => actualizeazaElementLista<PortofoliuItem>("portofoliu", item.id, { url: e.target.value })}
                         />
-                        
-                        <FileUploadField
-                          eticheta="Încarcă poza de copertă a site-ului"
-                          adminId={adminId}
-                          bucket="portofoliu"
-                          acceptaMultiplu={false}
-                          onIncarcat={(url) => {
-                            actualizeazaElementLista<any>("portofoliu", item.id, { imagine_url: url });
-                            setSeIncarcaFisier(false);
-                          }}
-                        />
-
-                        {item.imagine_url && (
-                          <div style={{ position: "relative", width: "90px", height: "90px", marginTop: "0.5rem" }}>
-                            <img
-                              src={item.imagine_url}
-                              alt="Preview website"
-                              style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)" }}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => actualizeazaElementLista<any>("portofoliu", item.id, { imagine_url: null })}
-                              style={{ position: "absolute", top: "-6px", right: "-6px", background: "#ef4444", color: "white", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center" }}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        )}
                       </div>
                     ) : (
                       <div>

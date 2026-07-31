@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@supabase/supabase-js'
 
@@ -28,8 +29,10 @@ export function OrangesInteractiveSection() {
   const [fallingOranges, setFallingOranges] = useState<FallingOrange[]>([])
   const spawnRef = useRef<HTMLDivElement>(null)
   const mouseRef = useRef<{ x: number; y: number }>({ x: -1000, y: -1000 })
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current = { x: e.clientX, y: e.clientY }
     }
@@ -41,7 +44,7 @@ export function OrangesInteractiveSection() {
     if (!spawnRef.current) return
     const rect = spawnRef.current.getBoundingClientRect()
     const startX = rect.left + rect.width / 2
-    const startY = rect.top
+    const startY = rect.top + window.scrollY
 
     const newOranges: FallingOrange[] = Array.from({ length: 6 }).map((_, i) => {
       const size = Math.floor(Math.random() * 35 + 95)
@@ -192,21 +195,23 @@ export function OrangesInteractiveSection() {
         </div>
       )}
 
-      {/* 🍊 STRATUL GLOBAL FIXAT LA BAZĂ */}
-      <div className="fixed inset-0 pointer-events-none z-[9999]" style={{ overflow: 'visible' }}>
-        {fallingOranges.map((orange) => (
-          <PureCssOrangeItem key={orange.id} orange={orange} mouseRef={mouseRef} />
-        ))}
-      </div>
+      {/* 🍊 PORTAL DIRECT ÎN BODY: OPREȘTE ORICE SABOTAJ DE LAYOUT */}
+      {mounted && createPortal(
+        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 999999, overflow: 'hidden' }}>
+          {fallingOranges.map((orange) => (
+            <PortalOrangeItem key={orange.id} orange={orange} mouseRef={mouseRef} />
+          ))}
+        </div>,
+        document.body
+      )}
     </section>
   )
 }
 
-function PureCssOrangeItem({ orange, mouseRef }: { orange: FallingOrange; mouseRef: React.MutableRefObject<{ x: number; y: number }> }) {
+function PortalOrangeItem({ orange, mouseRef }: { orange: FallingOrange; mouseRef: React.MutableRefObject<{ x: number; y: number }> }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [hasLanded, setHasLanded] = useState(false)
 
-  // Activăm aterizarea după ce se termină tranziția de cădere (1.4s)
   useEffect(() => {
     const timer = setTimeout(() => {
       setHasLanded(true)
@@ -214,7 +219,6 @@ function PureCssOrangeItem({ orange, mouseRef }: { orange: FallingOrange; mouseR
     return () => clearTimeout(timer)
   }, [])
 
-  // Logica de respingere magnetică rapidă și violentă față de mouse
   useEffect(() => {
     if (!hasLanded) return
 
@@ -229,13 +233,13 @@ function PureCssOrangeItem({ orange, mouseRef }: { orange: FallingOrange; mouseR
         const dy = centerY - mouseRef.current.y
         const distance = Math.sqrt(dx * dx + dy * dy)
 
-        const repelRadius = 350 // Rază mare de acțiune
+        const repelRadius = 400 // Rază mare
         let deflectX = 0
         let deflectY = 0
 
         if (distance < repelRadius && distance > 0) {
-          const factor = Math.pow(1 - distance / repelRadius, 1.5)
-          const force = factor * 900 // Forță magnetică extrem de agresivă
+          const factor = Math.pow(1 - distance / repelRadius, 2)
+          const force = factor * 1200 // Forță magnetică brutală, ca doi magneți identici
           deflectX = (dx / distance) * force
           deflectY = (dy / distance) * force
         }
@@ -254,13 +258,12 @@ function PureCssOrangeItem({ orange, mouseRef }: { orange: FallingOrange; mouseR
       style={{
         position: 'fixed',
         left: `calc(${orange.targetX}px - 50%)`,
-        top: hasLanded ? `${window.innerHeight - orange.size}px` : `${orange.startY}px`,
+        top: hasLanded ? `${window.innerHeight - orange.size}px` : `${orange.startY - window.scrollY}px`,
         width: `${orange.size}px`,
         height: `${orange.size}px`,
         transition: hasLanded ? 'none' : 'top 1.4s cubic-bezier(0.25, 1, 0.5, 1), left 1.4s cubic-bezier(0.25, 1, 0.5, 1)',
         pointerEvents: 'auto',
         willChange: 'top, transform',
-        zIndex: 9999,
       }}
     >
       <img
