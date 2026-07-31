@@ -23,6 +23,7 @@ const cvGol = (adminId: string): CV => ({
   admin_id: adminId,
   nume: "",
   prenume: "",
+  functie: "", // Adăugat pentru a rezolva erorile de tip
   telefon: "",
   email: "",
   localitate: "",
@@ -204,7 +205,6 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
     setSeSalveaza(true);
     setMesaj(null);
 
-    // Verificare corectată pe coloana admin_id din admin_profiles
     const { data: adminExistent } = await supabase
       .from("admin_profiles")
       .select("admin_id")
@@ -229,6 +229,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
       admin_id: idValidDeSalvat,
       nume: cv.nume || null,
       prenume: cv.prenume || null,
+      functie: cv.functie || null, // Adăugat în payload
       telefon: cv.telefon || null,
       email: cv.email || null,
       localitate: cv.localitate || null,
@@ -263,7 +264,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
     }
 
     setCv(data as CV);
-    localStorage.removeItem(`cv_draft_${adminId}`); // Curățăm draftul local după salvarea reușită
+    localStorage.removeItem(`cv_draft_${adminId}`);
     setMesaj({ tip: "ok", text: "CV salvat cu succes în Supabase!" });
     onSalvat?.(data as CV);
   }
@@ -283,6 +284,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             {cv.poza_url && <img src={cv.poza_url} alt="Avatar" style={{ width: 90, height: 90, borderRadius: "50%", objectFit: "cover" }} />}
             <div>
               <h1 style={{ fontSize: "1.75rem", fontWeight: 700 }}>{cv.nume} {cv.prenume}</h1>
+              {cv.functie && <h3 style={{ color: "var(--primary)", fontSize: "1.1rem", margin: "0.2rem 0" }}>{cv.functie}</h3>}
               <p style={{ opacity: 0.8, fontSize: "0.9rem" }}>{cv.localitate} | {cv.telefon} | {cv.email}</p>
             </div>
           </div>
@@ -357,6 +359,10 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
             <div>
               <Eticheta text="Prenume" obligatoriu />
               <input value={cv.prenume} onChange={(e) => actualizeaza("prenume", e.target.value)} placeholder="Prenume" />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <Eticheta text="Funcție / Titlu Profesional (ex: Full Stack Developer)" />
+              <input value={cv.functie ?? ""} onChange={(e) => actualizeaza("functie", e.target.value)} placeholder="Funcția principală" />
             </div>
             <div>
               <Eticheta text="Număr de telefon" obligatoriu />
@@ -771,7 +777,7 @@ export default function CVEditor({ adminId, cvInitial, onSalvat }: CVEditorProps
           </div>
 
           {mesaj && (
-            <p className={mesaj.tip === "ok" ? "ogw-mesaj ogw-mesaj--ok" : "ogw-mesaj ogw-mesaj--eroare"} style={{ marginTop: "0.75rem" }}>
+            <p className={mesaj.tip === "ok" ? "ogw-mesaj ogw-mesaj--ok" : "ogw-mesaj ogw-mesaj--eroare"} style={{ marginTop: "1rem" }}>
               {mesaj.text}
             </p>
           )}

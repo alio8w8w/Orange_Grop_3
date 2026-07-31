@@ -44,7 +44,7 @@ export function OrangesInteractiveSection() {
     if (!spawnRef.current) return
     const rect = spawnRef.current.getBoundingClientRect()
     const startX = rect.left + rect.width / 2
-    const startY = rect.top
+    const startY = rect.top + window.scrollY
 
     const newOranges: FallingOrange[] = Array.from({ length: 6 }).map((_, i) => {
       const size = Math.floor(Math.random() * 35 + 95)
@@ -195,7 +195,7 @@ export function OrangesInteractiveSection() {
         </div>
       )}
 
-      {/* 🍊 PORTAL GLOBAL DIRECT ÎN BODY */}
+      {/* 🍊 PORTAL GLOBAL FIXAT LA BAZA VIEWPORT-ULUI */}
       {mounted && createPortal(
         <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 999999, overflow: 'hidden' }}>
           {fallingOranges.map((orange) => (
