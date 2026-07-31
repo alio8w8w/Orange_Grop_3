@@ -17,15 +17,34 @@ export function HomeView() {
   // Folosim "as any" pentru a rezolva conflictul de tipuri generat de TypeScript
   const memberData = activeMember as any
 
-  // Verificăm dacă membrul selectat este Yana (după ID-ul din Supabase sau după nume/prenume)
+  // Verificăm dacă membrul selectat este Yana (Variant3)
   const isYana = 
     memberData.id === '7dffb2d4-60e7-43fb-b658-d5cfc9bbf8' || 
     memberData.nume?.toLowerCase() === 'yana' || 
     memberData.prenume?.toLowerCase() === 'yana'
 
-  // Dacă este Yana, o trimitem direct la Variant3
   if (isYana) {
     return <Variant3 member={memberData} />
+  }
+
+  // Verificăm dacă membrul selectat este Ana / Ilina (Variant2)
+  const isAna = 
+    memberData.nume?.toLowerCase() === 'ana' || 
+    memberData.prenume?.toLowerCase() === 'ana' ||
+    memberData.nume?.toLowerCase() === 'ilina' ||
+    memberData.prenume?.toLowerCase() === 'ilina'
+
+  if (isAna) {
+    return <Variant2 member={memberData} />
+  }
+
+  // Verificăm dacă membrul selectat este Nikita (Variant4)
+  const isNikita = 
+    memberData.nume?.toLowerCase() === 'nikita' || 
+    memberData.prenume?.toLowerCase() === 'nikita'
+
+  if (isNikita) {
+    return <Variant4 member={memberData} />
   }
 
   switch (activeMember.themeVariant) {

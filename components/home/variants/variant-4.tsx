@@ -10,30 +10,39 @@ import { ECVSections } from '@/components/home/ecv-sections'
 // Variant 4 — GEOMETRIC. Layout built from base-color shapes and blocks.
 export function Variant4({ member }: { member: TeamMember }) {
   const { setActiveMemberId } = useTeam()
+  const m = member as any
+
+  const firstName = m?.firstName || m?.nume || ''
+  const lastName = m?.lastName || m?.prenume || ''
+  const role = m?.role || m?.functie || ''
+  const tagline = m?.tagline || m?.biografie || ''
+  const bio = m?.bio || m?.descriere || ''
+  const profilePic = m?.profilePicture || m?.poza_url || '/placeholder.svg'
+  const location = m?.contacts?.location || m?.localitate || ''
 
   const contacts = [
-    { icon: <Mail className="h-4 w-4" />, value: member.contacts.email },
-    { icon: <Phone className="h-4 w-4" />, value: member.contacts.phone },
-    { icon: <Globe className="h-4 w-4" />, value: member.contacts.website },
-    { icon: <MapPin className="h-4 w-4" />, value: member.contacts.location },
-  ]
+    { icon: <Mail className="h-4 w-4" />, value: m?.contacts?.email || m?.email },
+    { icon: <Phone className="h-4 w-4" />, value: m?.contacts?.phone || m?.telefon },
+    { icon: <Globe className="h-4 w-4" />, value: m?.contacts?.website },
+    { icon: <MapPin className="h-4 w-4" />, value: location },
+  ].filter(c => c.value)
 
   return (
-    <div className="bg-brand-cream text-brand-black">
+    <div className="bg-brand-cream text-brand-black min-h-screen">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
         <button
           type="button"
           onClick={() => setActiveMemberId(null)}
-          className="mb-8 inline-flex items-center gap-2 font-display text-xs font-bold uppercase tracking-wide text-brand-black/60 hover:text-brand-orange"
+          className="mb-8 inline-flex items-center gap-2 font-display text-xs font-bold uppercase tracking-wide text-brand-black/60 hover:text-brand-orange transition-colors"
         >
           <ArrowLeft className="h-4 w-4" /> Meet the team
         </button>
 
         <p className="font-display text-sm font-bold uppercase tracking-[0.25em] text-brand-orange">
-          {member.role}
+          {role}
         </p>
         <h1 className="mt-3 font-display text-6xl font-black uppercase leading-[0.9] tracking-tight text-balance sm:text-7xl">
-          {member.firstName} {member.lastName}
+          {firstName} {lastName}
         </h1>
 
         {/* Geometric composition grid */}
@@ -41,8 +50,8 @@ export function Variant4({ member }: { member: TeamMember }) {
           {/* Portrait block spans 2x2 */}
           <div className="relative col-span-2 row-span-2 overflow-hidden rounded-lg border-4 border-brand-black">
             <Image
-              src={member.profilePicture || '/placeholder.svg'}
-              alt={`${member.firstName} ${member.lastName}`}
+              src={profilePic}
+              alt={`${firstName} ${lastName}`}
               fill
               priority
               sizes="(min-width: 640px) 50vw, 100vw"
@@ -73,7 +82,7 @@ export function Variant4({ member }: { member: TeamMember }) {
           {/* Tagline block */}
           <div className="flex items-center rounded-lg bg-brand-black p-4">
             <p className="font-display text-sm font-bold uppercase leading-tight text-brand-white">
-              {member.tagline}
+              {tagline}
             </p>
           </div>
 
@@ -91,13 +100,13 @@ export function Variant4({ member }: { member: TeamMember }) {
         </div>
 
         <p className="mt-8 max-w-xl text-pretty leading-relaxed text-brand-black/70">
-          {member.bio}
+          {bio}
         </p>
 
         <ul className="mt-6 grid gap-3 sm:grid-cols-4">
-          {contacts.map((c) => (
+          {contacts.map((c, idx) => (
             <li
-              key={c.value}
+              key={idx}
               className="flex items-center gap-2 rounded-lg border-2 border-brand-black/15 bg-brand-white px-3 py-2.5 text-sm text-brand-black/80"
             >
               <span className="text-brand-orange">{c.icon}</span>

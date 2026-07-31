@@ -92,74 +92,15 @@ export function ECVSections({
   const t = TONES[tone]
   const m = member as any
 
-  // Setăm valori implicite pentru statistici pentru a preveni erorile de tip "undefined"
-  const stats = m.experienceStats || { years: '2', projects: '10', clients: '5', awards: '0' }
-
-  const statCards = [
-    { value: `${stats.years}+`, label: 'Years Experience' },
-    { value: `${stats.projects}+`, label: 'Projects Delivered' },
-    { value: `${stats.clients}+`, label: 'Happy Clients' },
-    { value: `${stats.awards}`, label: 'Awards Won' },
-  ]
-
   const educationList = m.education || []
   const skillsList = m.skills || []
   const portfolioList = m.portfolioWorks || m.portfolio || []
 
   return (
     <div className="mt-16 space-y-20">
-      {/* Experience — Bento box statistics */}
-      <section>
-        <SectionTitle index="01" label="Experience" t={t} />
-        <div className="grid grid-cols-2 gap-4 sm:auto-rows-[150px] sm:grid-cols-4">
-          <div
-            className={cn(
-              'col-span-2 flex flex-col justify-between rounded-3xl border p-6 sm:row-span-2',
-              t.card,
-            )}
-          >
-            <span className={cn('font-display text-xs font-bold uppercase tracking-wide', t.eyebrow)}>
-              {statCards[0].label}
-            </span>
-            <span className={cn('font-display text-6xl font-black leading-none sm:text-8xl', t.cardText)}>
-              {statCards[0].value}
-            </span>
-          </div>
-          <div
-            className={cn(
-              'col-span-2 flex flex-col justify-between rounded-3xl border p-6',
-              t.card,
-            )}
-          >
-            <span className={cn('font-display text-xs font-bold uppercase tracking-wide', t.eyebrow)}>
-              {statCards[1].label}
-            </span>
-            <span className={cn('font-display text-5xl font-black leading-none', t.cardText)}>
-              {statCards[1].value}
-            </span>
-          </div>
-          {statCards.slice(2).map((s) => (
-            <div
-              key={s.label}
-              className={cn(
-                'flex flex-col justify-between rounded-3xl border p-6',
-                t.card,
-              )}
-            >
-              <span className={cn('font-display text-[0.65rem] font-bold uppercase tracking-wide', t.eyebrow)}>
-                {s.label}
-              </span>
-              <span className={cn('font-display text-4xl font-black leading-none', t.cardText)}>
-                {s.value}
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Education — Timeline */}
       <section>
-        <SectionTitle index="02" label="Education" t={t} />
+        <SectionTitle index="01" label="Education" t={t} />
         <ol className="relative ml-2 space-y-8 border-l-2 pl-8" style={{ borderColor: 'transparent' }}>
           <span className={cn('absolute left-0 top-1 h-full w-0.5', t.line)} aria-hidden />
           {educationList.length > 0 ? (
@@ -199,7 +140,7 @@ export function ECVSections({
 
       {/* Skills — progress bars */}
       <section>
-        <SectionTitle index="03" label="Skills" t={t} />
+        <SectionTitle index="02" label="Skills" t={t} />
         <div className="grid gap-x-10 gap-y-6 sm:grid-cols-2">
           {skillsList.length > 0 ? (
             skillsList.map((skill: any, idx: number) => {
@@ -230,7 +171,7 @@ export function ECVSections({
 
       {/* Portfolio — editorial grid */}
       <section>
-        <SectionTitle index="04" label="Portfolio" t={t} />
+        <SectionTitle index="03" label="Portfolio" t={t} />
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {portfolioList.length > 0 ? (
             portfolioList.map((work: any, i: number) => (
