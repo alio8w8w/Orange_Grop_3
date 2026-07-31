@@ -19,7 +19,7 @@ export function HomeView() {
 
   switch (activeMember.themeVariant) {
     case 1:
-      return <Variant1 member={memberData} />
+      return <Variant1 /> // Am șters member={memberData}
     case 2:
       return <Variant2 member={memberData} />
     case 3:
@@ -27,6 +27,6 @@ export function HomeView() {
     case 4:
       return <Variant4 member={memberData} />
     default:
-      return <Variant1 member={memberData} />
+      return <Variant1 /> // Am șters member={memberData}
   }
 }

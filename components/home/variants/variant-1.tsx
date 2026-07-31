@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { ArrowLeft, Mail, Phone, MapPin, Briefcase, GraduationCap, Code, Instagram, Linkedin, Github } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, MapPin, Briefcase, GraduationCap, Code } from 'lucide-react'
 import { useTeam } from '@/components/team-context'
 import { supabase } from '@/lib/supabase/client'
 // TODO: Importă hook-ul tău de i18n (ex: next-intl)
@@ -120,7 +120,7 @@ export function Variant1() {
           {/* Poza din Supabase cu stilizare */}
           <div className="relative w-full max-w-md mx-auto lg:ml-auto">
             <div className="absolute -inset-4 z-0 rounded-full bg-[#F26522] blur-3xl opacity-20"></div>
-            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[2rem] border-8 border-white shadow-2xl">
+            <div className="relative aspect-3/4 w-full overflow-hidden rounded-[2rem] border-8 border-white shadow-2xl">
               <Image
                 src={cvData.poza_url || '/placeholder.svg'}
                 alt={`${cvData.nume} ${cvData.prenume}`}
@@ -210,16 +210,20 @@ export function Variant1() {
                 {t('contactDesc')}
               </p>
               
-              {/* Linkuri Sociale din JSONB */}
+              {/* Linkuri Sociale din JSONB cu SVG native */}
               <div className="mt-8 flex gap-4">
                 {cvData.social_links?.instagram && (
                   <a href={cvData.social_links.instagram} target="_blank" rel="noreferrer" className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#F26522] hover:scale-110 transition-transform">
-                    <Instagram size={24} />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                    </svg>
                   </a>
                 )}
                 {cvData.social_links?.linkedin && (
                   <a href={cvData.social_links.linkedin} target="_blank" rel="noreferrer" className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#F26522] hover:scale-110 transition-transform">
-                    <Linkedin size={24} />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/>
+                    </svg>
                   </a>
                 )}
               </div>
