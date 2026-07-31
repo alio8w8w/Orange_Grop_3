@@ -14,10 +14,9 @@ interface FallingOrange {
   id: number
   startX: number
   startY: number
-  xOffset: number
+  targetX: number
   size: number
   rotation: number
-  duration: number
 }
 
 export function OrangesInteractiveSection() {
@@ -40,28 +39,29 @@ export function OrangesInteractiveSection() {
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [])
 
-  // Funcție care declanșază căderea portocalelor de sub titlu
+  // Funcție care declanșază căderea portocalelor care se vor așeza jos
   const triggerOranges = () => {
     if (!spawnRef.current) return
     const rect = spawnRef.current.getBoundingClientRect()
     const startX = rect.left + rect.width / 2
-    const startY = rect.top // Coordonată fixă în raport cu viewportul
+    const startY = rect.top
 
-    const newOranges: FallingOrange[] = Array.from({ length: 9 }).map((_, i) => ({
-      id: Date.now() + i + Math.random(),
-      startX,
-      startY,
-      xOffset: (Math.random() - 0.5) * 600, // Răspândire / piramidă
-      size: Math.floor(Math.random() * 45 + 100), // Portocale mari și vizibile
-      rotation: Math.random() * 360,
-      duration: Math.random() * 0.8 + 1.8,
-    }))
+    // Generăm un grup nou de portocale care cad și se așează la bază
+    const newOranges: FallingOrange[] = Array.from({ length: 6 }).map((_, i) => {
+      const size = Math.floor(Math.random() * 35 + 95) // Dimensiune vizibilă
+      const targetX = Math.random() * (window.innerWidth - 160) + 80 // Distribuite pe lățimea ecranului
+      return {
+        id: Date.now() + i + Math.random(),
+        startX,
+        startY,
+        targetX,
+        size,
+        rotation: Math.random() * 360,
+      }
+    })
 
+    // Adăugăm portocalele fără a le mai șterge automat, ca să rămână așezate jos
     setFallingOranges((prev) => [...prev, ...newOranges])
-
-    setTimeout(() => {
-      setFallingOranges((prev) => prev.filter((o) => !newOranges.includes(o)))
-    }, 2800)
   }
 
   useEffect(() => {
@@ -99,7 +99,7 @@ export function OrangesInteractiveSection() {
   return (
     <section id="projects" className="relative py-20 sm:py-28 lg:py-32 bg-transparent overflow-visible">
       
-      {/* Stiluri CSS pentru animația de pulsare a bulelor de background */}
+      {/* Stiluri CSS pentru animația de pulsare */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes glowPulse {
           0%, 100% { opacity: 0.2; transform: scale(1); }
@@ -110,7 +110,7 @@ export function OrangesInteractiveSection() {
         .animate-glow-3 { animation: glowPulse 6s ease-in-out infinite 3s; }
       `}} />
 
-      {/* Buline / Bule luminoase de background */}
+      {/* Buline luminoase de background */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute top-12 left-8 w-80 h-80 sm:w-[450px] sm:h-[450px] bg-brand-orange/25 rounded-full blur-[120px] animate-glow-1" />
         <div className="absolute top-1/2 -translate-y-1/2 right-10 w-96 h-96 sm:w-[500px] sm:h-[500px] bg-brand-orange/20 rounded-full blur-[140px] animate-glow-2" />
@@ -205,11 +205,11 @@ export function OrangesInteractiveSection() {
         </div>
       )}
 
-      {/* 🍊 STRATUL GLOBAL FIXED PENTRU CĂDERE PÂNĂ JOS ȘI REPULSIE FĂRĂ LAG */}
+      {/* 🍊 STRATUL GLOBAL FIXED: PORTOCALELE CAD ȘI RĂMÂN AȘEZATE JOS, FUGIND DE MOUSE */}
       <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
         <AnimatePresence>
           {fallingOranges.map((orange) => (
-            <FallingOrangeItem key={orange.id} orange={orange} mouseRef={mouseRef} />
+            <SettledOrangeItem key={orange.id} orange={orange} mouseRef={mouseRef} />
           ))}
         </AnimatePresence>
       </div>
@@ -217,20 +217,31 @@ export function OrangesInteractiveSection() {
   )
 }
 
-// Subcomponentă optimizată cu ocolire pe raza de 20% din viewport și cădere completă până jos
-function FallingOrangeItem({ orange, mouseRef }: { orange: FallingOrange; mouseRef: React.MutableRefObject<{ x: number; y: number }> }) {
+// Subcomponentă: Cade până jos, se așează la bază și reacționează la mouse pe raza de 20%
+function SettledOrangeItem({ orange, mouseRef }: { orange: FallingOrange; mouseRef: React.MutableRefObject<{ x: number; y: number }> }) {
   const itemRef = useRef<HTMLImageElement>(null)
+  const [hasLanded, setHasLanded] = useState(false)
+
+  // După ce a căzut (1.4 secunde), devine complet activă pe sol și fuge de mouse
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setHasLanded(true)
+    }, 1400)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
+    if (!hasLanded) return
+
     let animationFrameId: number
     const updatePosition = () => {
       if (itemRef.current) {
         const rect = itemRef.current.getBoundingClientRect()
-        const orangeCenterX = rect.left + rect.width / 2
-        const orangeCenterY = rect.top + rect.height / 2
+        const centerX = rect.left + rect.width / 2
+        const centerY = rect.top + rect.height / 2
 
-        const dx = orangeCenterX - mouseRef.current.x
-        const dy = orangeCenterY - mouseRef.current.y
+        const dx = centerX - mouseRef.current.x
+        const dy = centerY - mouseRef.current.y
         const distance = Math.sqrt(dx * dx + dy * dy)
 
         // 20% din dimensiunea minimă a viewportului ca rază de repulsie
@@ -240,20 +251,19 @@ function FallingOrangeItem({ orange, mouseRef }: { orange: FallingOrange; mouseR
         let deflectY = 0
 
         if (distance < repelRadius && distance > 0) {
-          const force = (1 - distance / repelRadius) * 250
+          const force = (1 - distance / repelRadius) * 300
           deflectX = (dx / distance) * force
           deflectY = (dy / distance) * force
         }
 
-        // Aplicăm translația direct pe DOM pentru a evita re-render-urile React și lag-ul
-        itemRef.current.style.setProperty('--deflect-x', `${deflectX}px`)
-        itemRef.current.style.setProperty('--deflect-y', `${deflectY}px`)
+        // Aplicăm translația direct pe DOM pentru a fugi instantaneu de mouse
+        itemRef.current.style.transform = `translate(${deflectX}px, ${deflectY}px)`
       }
       animationFrameId = requestAnimationFrame(updatePosition)
     }
     animationFrameId = requestAnimationFrame(updatePosition)
     return () => cancelAnimationFrame(animationFrameId)
-  }, [mouseRef])
+  }, [hasLanded, mouseRef])
 
   return (
     <motion.img
@@ -271,24 +281,24 @@ function FallingOrangeItem({ orange, mouseRef }: { orange: FallingOrange; mouseR
         rotate: 0 
       }}
       animate={{
-        x: 'calc(-50% + var(--deflect-x, 0px))',
-        y: window.innerHeight + 120, // Cad până la baza absolută a ecranului
+        left: orange.targetX,
+        top: window.innerHeight - orange.size - 10, // Așezate fix la baza de jos a ecranului
+        x: '-50%',
+        y: 0,
         scale: 1,
-        opacity: [0, 1, 1, 0.95],
+        opacity: 1,
         rotate: orange.rotation + 360,
       }}
-      exit={{ opacity: 0 }}
       transition={{
-        duration: orange.duration,
-        ease: [0.25, 1, 0.5, 1],
-        y: { duration: orange.duration, ease: 'easeIn' },
-        x: { duration: 0.1, ease: 'linear' }
+        duration: 1.4,
+        ease: [0.25, 1, 0.5, 1]
       }}
       style={{
         width: `${orange.size}px`,
         height: `${orange.size}px`,
         objectFit: 'contain',
-        filter: 'brightness(0.85) contrast(1.05) saturate(1.10) drop-shadow(0 12px 20px rgba(0,0,0,0.6))',
+        filter: 'brightness(0.85) contrast(1.05) saturate(1.10) drop-shadow(0 12px 20px rgba(0,0,0,0.7))',
+        pointerEvents: 'auto',
       }}
     />
   )
