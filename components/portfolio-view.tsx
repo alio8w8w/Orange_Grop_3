@@ -3,41 +3,79 @@
 import Image from 'next/image'
 import { useTeam } from '@/components/team-context'
 import { MemberSwitcher } from '@/components/home/member-switcher'
+import { useTranslations } from 'next-intl'
+import { supabase } from '@/lib/supabase/client'
 
 export function PortfolioView() {
   const { activeMember, members } = useTeam()
   const member = activeMember ?? members?.[0]
+  const t = useTranslations('PortfolioView')
 
   if (!member) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-20 text-center text-brand-white/60">
-        Se încarcă portofoliul...
+      <div className="mx-auto max-w-6xl px-4 py-20 text-center text-brand-white/60 pt-28 sm:pt-32">
+        {t('loading')}
       </div>
     )
   }
 
-  // Definim explicit tipul ca 'any' sau folosim opțional chaining pentru a scăpa de erori
-  const works: any[] = member.portfolioWorks ?? []
+  // Funcție sigură care verifică dacă string-ul este o imagine validă și evită linkurile de site-uri externe
+  const getSafeImageUrl = (pathOrUrl: string) => {
+    if (!pathOrUrl || typeof pathOrUrl !== 'string' || pathOrUrl.trim() === '') {
+      return '/placeholder.svg'
+    }
+    // Dacă URL-ul conține rute de site-uri (ex: vercel.app) care nu sunt imagini directe
+    if (pathOrUrl.includes('vercel.app') || pathOrUrl.includes('http://') || pathOrUrl.includes('https://')) {
+      // Verificăm dacă se termină într-extensie de imagine, altfel returnăm placeholder
+      const isImage = /\.(jpg|jpeg|png|webp|avif|gif|svg)($|\?)/i.test(pathOrUrl)
+      if (!isImage) {
+        return '/placeholder.svg'
+      }
+      return pathOrUrl
+    }
+    if (pathOrUrl.startsWith('/')) {
+      return pathOrUrl
+    }
+    // Cale din bucket-ul Supabase
+    const { data } = supabase.storage.from('cv_poze').getPublicUrl(pathOrUrl)
+    return data?.publicUrl || '/placeholder.svg'
+  }
+
+  const firstName = member.firstName || member.nume || ''
+  const lastName = member.lastName || member.prenume || ''
+  const role = member.role || member.functie || ''
+  const rawPic = member.profilePicture || member.poza_url || ''
+  const profilePic = getSafeImageUrl(rawPic)
+
+  const rawWorks = member.portofoliu || member.portfolioWorks || []
+
+  const works = rawWorks.map((work: any, index: number) => ({
+    id: work.id ?? index,
+    title: work.title || work.titlu || `${t('projectTitle')} ${index + 1}`,
+    description: work.description || work.descriere || '',
+    category: work.category || t('defaultCategory'),
+    year: work.year || '2026',
+    image: getSafeImageUrl(work.image || work.url),
+  }))
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="mx-auto max-w-6xl px-4 pt-28 pb-10 sm:px-6 sm:pt-32 sm:py-14">
       {!activeMember && (
         <p className="mb-6 rounded-md border border-brand-orange/40 bg-brand-orange/10 px-4 py-2 text-sm text-brand-white/70">
-          Showing the first team member by default. Pick anyone below to see
-          their portfolio.
+          {t('defaultNotice')}
         </p>
       )}
 
       <div className="flex flex-col gap-6 border-b border-brand-white/10 pb-8 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-display text-xs font-bold uppercase tracking-[0.2em] text-brand-orange">
-            Project Portfolio
+            {t('projectPortfolio')}
           </p>
           <h1 className="font-display text-4xl font-black uppercase tracking-tight text-brand-white sm:text-5xl">
-            {member.firstName} {member.lastName}
+            {firstName} {lastName}
           </h1>
           <p className="mt-1 text-sm text-brand-white/60">
-            {member.role} · {works.length} selected works
+            {role} · {works.length} {t('selectedWorks')}
           </p>
         </div>
         <MemberSwitcher tone="onDark" />
@@ -46,13 +84,13 @@ export function PortfolioView() {
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {works.map((work: any, i: number) => (
           <article
-            key={work.id ?? i}
+            key={work.id}
             className="group flex flex-col overflow-hidden rounded-lg border border-brand-white/10 bg-brand-white/5 transition-colors hover:border-brand-orange"
           >
             <div className="relative aspect-[4/3] w-full overflow-hidden">
               <Image
-                src={work.image || '/placeholder.svg'}
-                alt={work.title || 'Project'}
+                src={work.image}
+                alt={work.title}
                 fill
                 sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
                 className="object-cover transition-transform duration-300 group-hover:scale-105"

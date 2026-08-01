@@ -49,27 +49,23 @@
   "eroare": "Nu am putut încărca echipa.",
   "niciunSpecialist": "Nu există specialiști înregistrați momentan."
 },
-  "Variant1": {
-    "profileNotFound": "Nu am găsit profilul Ilinei.",
-    "backToTeam": "Înapoi la echipă",
-    "defaultRole": "Full Stack Developer",
-    "heroWord1": "CODE",
-    "heroWord2": "THAT",
-    "heroWord3": "CONNECTS",
-    "im": "Eu sunt",
-    "defaultBio": "Sunt o tânără implicată în activități de voluntariat, pasionată de dezvoltare web și crearea de soluții digitale de impact.",
-    "overlay1": "Strategie",
-    "overlay2": "Cod",
-    "overlay3": "Impact",
-    "skillsMissing": "Competențele urmează a fi adăugate.",
+  "cv": {
+    "meet_the_team": "Înapoi la echipă",
+    "cover_letter": "Scrisoare de intenție",
+    "date_of_birth": "Data nașterii",
+    "driving_license": "Permis de conducere",
+    "location": "Localitate",
+    "phone": "Telefon",
+    "email": "Email",
+    "social_links": "Rețele sociale"
+  },
+  "cv_sections": {
+    "experience": "Experiență profesională",
     "education": "Educație",
-    "educationMissing": "Nu există date despre educație.",
-    "experience": "Experiență",
-    "present": "Prezent",
-    "experienceMissing": "Experiența profesională va fi adăugată curând.",
-    "letsWork": "Să lucrăm",
-    "together": "Împreună.",
-    "contactDesc": "Disponibilă pentru proiecte, colaborări și discuții despre tehnologie și inovație."
+    "languages": "Limbi cunoscute",
+    "skills": "Abilități",
+    "portfolio": "Portofoliu",
+    "documents": "Documente"
   },
   "MemberSwitcher": {
     "switchMember": "Schimbă membrul",
@@ -82,5 +78,13 @@
     "softSkills": "Abilități Sociale / Soft Skills",
     "hardSkills": "Competențe Tehnice / Hard Skills",
     "generalSkills": "Competențe Generale"
+  },
+  "PortfolioView": {
+    "loading": "Se încarcă portofoliul...",
+    "defaultNotice": "Se afișează primul membru al echipei în mod implicit. Alege pe oricine de mai jos pentru a-i vedea portofoliul.",
+    "projectPortfolio": "Portofoliu Proiecte",
+    "selectedWorks": "lucrări selectate",
+    "projectTitle": "Proiect",
+    "defaultCategory": "Dezvoltare Web / Design"
   }
 }
